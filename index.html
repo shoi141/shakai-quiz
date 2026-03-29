@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>社会クイズ</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  body { background: #f0f9ff; }
+  .portal-wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 40px; }
+  .portal-header { text-align: center; margin-bottom: 28px; }
+  .portal-emoji { font-size: 56px; display: block; margin-bottom: 8px; }
+  .portal-title { font-size: 26px; font-weight: 900; color: #1e3a8a; margin-bottom: 4px; }
+  .portal-sub { font-size: 13px; color: #9ca3af; }
+  .section-label { font-size: 11px; font-weight: 900; color: #9ca3af; letter-spacing: 0.1em; margin: 24px 0 10px 4px; }
+  .quiz-card {
+    display: flex; align-items: center; gap: 14px;
+    background: #fff; border-radius: 16px; padding: 16px;
+    text-decoration: none; color: inherit;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    margin-bottom: 10px;
+    border: 2px solid #e5e7eb;
+    transition: transform 0.1s;
+  }
+  .quiz-card:active { transform: translateY(2px); }
+  .quiz-card-emoji { font-size: 32px; flex-shrink: 0; }
+  .quiz-card-name { font-size: 16px; font-weight: 900; color: #1e3a8a; margin-bottom: 3px; }
+  .quiz-card-desc { font-size: 12px; color: #6b7280; }
+  .quiz-card-arrow { font-size: 22px; color: #d1d5db; margin-left: auto; }
+  .portal-footer { text-align: center; margin-top: 28px; font-size: 12px; color: #d1d5db; }
+  .portal-footer a { color: #3b82f6; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="portal-wrap">
+  <div class="portal-header">
+    <span class="portal-emoji">🗾</span>
+    <h1 class="portal-title">社会クイズ</h1>
+    <p class="portal-sub">地理・歴史・公民を楽しく覚えよう！</p>
+  </div>
+
+  <div class="section-label">🗾 地理</div>
+
+  <a class="quiz-card" href="kensho-quiz.html">
+    <span class="quiz-card-emoji">🏅</span>
+    <div>
+      <div class="quiz-card-name">県章クイズ</div>
+      <div class="quiz-card-desc">47都道府県の県章を地方別に覚えよう</div>
+    </div>
+    <span class="quiz-card-arrow">›</span>
+  </a>
+
+  <div class="portal-footer">
+    <a href="https://shoi141.github.io/quiz-portal/">← 教科トップへもどる</a>
+  </div>
+</div>
+</body>
+</html>
