@@ -9,121 +9,79 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <style>
-  body { background: #f0f9ff; }
-  .rika-root {
-    min-height: 100vh; background: #f0f9ff;
-    padding: 12px; max-width: 480px; margin: 0 auto;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .emblem-box {
-    width: 160px; height: 160px; margin: 0 auto 8px;
-    display: flex; align-items: center; justify-content: center;
-    background: #fff; border-radius: 20px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-    overflow: hidden;
-  }
-  .emblem-box img {
-    width: 130px; height: 130px; object-fit: contain;
-  }
-  .select-grid { display: flex; flex-direction: column; gap: 8px; }
-  .select-btn {
-    width: 100%; padding: 13px 16px;
-    border: 2px solid #e5e7eb; border-radius: 14px;
-    background: #fff; cursor: pointer;
-    font-size: 15px; font-weight: bold; text-align: left;
-    font-family: inherit;
-  }
-  .select-btn.show-correct { background: #d1fae5; border-color: #10b981; color: #065f46; }
-  .select-btn.wrong { background: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.7; }
-  .explanation-card {
-    background: #fef3c7; border: 1.5px solid #f59e0b;
-    border-radius: 12px; padding: 12px 14px;
-    font-size: 13px; color: #78350f; line-height: 1.9;
-  }
-  .region-tag {
-    display: inline-block; font-size: 11px; font-weight: bold;
-    padding: 2px 10px; border-radius: 99px;
-    background: #e0f2fe; color: #0369a1; margin-bottom: 8px;
-  }
-  .diff-btn-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-  .diff-card-btn {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 16px; border-radius: 14px;
-    cursor: pointer; text-align: left; border: 2px solid transparent;
-    font-family: inherit; background: #f9fafb;
-  }
-  .diff-card-btn .diff-name { font-weight: 900; font-size: 15px; }
-  .diff-card-btn .diff-desc { font-size: 11px; color: #6b7280; margin-top: 2px; }
+body{background:#f0f9ff;}
+.rika-root{min-height:100vh;background:#f0f9ff;padding:12px;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+.emblem-wrap{display:flex;justify-content:center;margin:4px 0 12px;}
+.select-grid{display:flex;flex-direction:column;gap:8px;}
+.select-btn{width:100%;padding:13px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;cursor:pointer;font-size:15px;font-weight:bold;text-align:left;font-family:inherit;}
+.select-btn.show-correct{background:#d1fae5;border-color:#10b981;color:#065f46;}
+.select-btn.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b;opacity:0.7;}
+.explanation-card{background:#fef3c7;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f;line-height:1.9;}
+.region-tag{display:inline-block;font-size:11px;font-weight:bold;padding:2px 10px;border-radius:99px;background:#e0f2fe;color:#0369a1;margin-bottom:8px;}
+.diff-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.diff-card-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;cursor:pointer;text-align:left;border:2px solid transparent;font-family:inherit;background:#f9fafb;}
+.diff-card-btn .diff-name{font-weight:900;font-size:15px;}
+.diff-card-btn .diff-desc{font-size:11px;color:#6b7280;margin-top:2px;}
 </style>
 </head>
 <body>
 <div id="root"></div>
+
 <script>
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
 function randomStars(n){return Array.from({length:n},()=>["⭐","🌟","✨"][randInt(0,2)]).join(" ");}
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-// ── 県章バンク ─────────────────────────────────────────────
-// Wikimedia Commons の県章画像（パブリックドメイン）
-// [都道府県名, 地方, 画像URL, 解説]
-const KENSH0_BANK = [
-  // 北海道・東北
-  ["北海道","北海道・東北","https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Emblem_of_Hokkaido.svg/200px-Emblem_of_Hokkaido.svg.png","北海道の「北」の字を図案化。五角形の星形は北極星を表す。"],
-  ["青森県","北海道・東北","https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Emblem_of_Aomori_Prefecture.svg/200px-Emblem_of_Aomori_Prefecture.svg.png","「青」の字を図案化したデザイン。"],
-  ["岩手県","北海道・東北","https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Emblem_of_Iwate_Prefecture.svg/200px-Emblem_of_Iwate_Prefecture.svg.png","「岩」の字を図案化したデザイン。"],
-  ["宮城県","北海道・東北","https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Emblem_of_Miyagi_Prefecture.svg/200px-Emblem_of_Miyagi_Prefecture.svg.png","「宮」の字を図案化したデザイン。"],
-  ["秋田県","北海道・東北","https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Emblem_of_Akita_Prefecture.svg/200px-Emblem_of_Akita_Prefecture.svg.png","「秋」の字を図案化したデザイン。"],
-  ["山形県","北海道・東北","https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Emblem_of_Yamagata_Prefecture.svg/200px-Emblem_of_Yamagata_Prefecture.svg.png","「山」の字を図案化したデザイン。"],
-  ["福島県","北海道・東北","https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Emblem_of_Fukushima_Prefecture.svg/200px-Emblem_of_Fukushima_Prefecture.svg.png","「福」の字を図案化したデザイン。"],
-  // 関東
-  ["茨城県","関東","https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Emblem_of_Ibaraki_Prefecture.svg/200px-Emblem_of_Ibaraki_Prefecture.svg.png","「茨」の字を図案化したデザイン。"],
-  ["栃木県","関東","https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Emblem_of_Tochigi_Prefecture.svg/200px-Emblem_of_Tochigi_Prefecture.svg.png","「ト」の字を図案化したデザイン。"],
-  ["群馬県","関東","https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Emblem_of_Gunma_Prefecture.svg/200px-Emblem_of_Gunma_Prefecture.svg.png","「群」の字を図案化したデザイン。"],
-  ["埼玉県","関東","https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Emblem_of_Saitama_Prefecture.svg/200px-Emblem_of_Saitama_Prefecture.svg.png","「サ」の字を図案化したデザイン。"],
-  ["千葉県","関東","https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Emblem_of_Chiba_Prefecture.svg/200px-Emblem_of_Chiba_Prefecture.svg.png","「千」の字を図案化したデザイン。"],
-  ["東京都","関東","https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Emblem_of_Tokyo_Metropolis.svg/200px-Emblem_of_Tokyo_Metropolis.svg.png","「東」の字を六角形に図案化したデザイン。"],
-  ["神奈川県","関東","https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Emblem_of_Kanagawa_Prefecture.svg/200px-Emblem_of_Kanagawa_Prefecture.svg.png","「神」の字を図案化したデザイン。"],
-  // 中部
-  ["新潟県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Emblem_of_Niigata_Prefecture.svg/200px-Emblem_of_Niigata_Prefecture.svg.png","「潟」の字を図案化したデザイン。"],
-  ["富山県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Emblem_of_Toyama_Prefecture.svg/200px-Emblem_of_Toyama_Prefecture.svg.png","「富」の字を図案化したデザイン。"],
-  ["石川県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Emblem_of_Ishikawa_Prefecture.svg/200px-Emblem_of_Ishikawa_Prefecture.svg.png","「石」の字を図案化したデザイン。"],
-  ["福井県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Emblem_of_Fukui_Prefecture.svg/200px-Emblem_of_Fukui_Prefecture.svg.png","「福」の字を図案化したデザイン。"],
-  ["山梨県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Emblem_of_Yamanashi_Prefecture.svg/200px-Emblem_of_Yamanashi_Prefecture.svg.png","「山」の字を図案化したデザイン。"],
-  ["長野県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Emblem_of_Nagano_Prefecture.svg/200px-Emblem_of_Nagano_Prefecture.svg.png","「長」の字を図案化したデザイン。"],
-  ["岐阜県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Emblem_of_Gifu_Prefecture.svg/200px-Emblem_of_Gifu_Prefecture.svg.png","「岐」の字を図案化したデザイン。"],
-  ["静岡県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Emblem_of_Shizuoka_Prefecture.svg/200px-Emblem_of_Shizuoka_Prefecture.svg.png","「静」の字を図案化したデザイン。"],
-  ["愛知県","中部","https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Emblem_of_Aichi_Prefecture.svg/200px-Emblem_of_Aichi_Prefecture.svg.png","「愛」の字を図案化したデザイン。"],
-  // 近畿
-  ["三重県","近畿","https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Emblem_of_Mie_Prefecture.svg/200px-Emblem_of_Mie_Prefecture.svg.png","「三」の字を図案化したデザイン。"],
-  ["滋賀県","近畿","https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Emblem_of_Shiga_Prefecture.svg/200px-Emblem_of_Shiga_Prefecture.svg.png","「滋」の字を図案化したデザイン。"],
-  ["京都府","近畿","https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Emblem_of_Kyoto_Prefecture.svg/200px-Emblem_of_Kyoto_Prefecture.svg.png","「京」の字を図案化したデザイン。"],
-  ["大阪府","近畿","https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Emblem_of_Osaka_Prefecture.svg/200px-Emblem_of_Osaka_Prefecture.svg.png","「大」の字を図案化したデザイン。"],
-  ["兵庫県","近畿","https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Emblem_of_Hyogo_Prefecture.svg/200px-Emblem_of_Hyogo_Prefecture.svg.png","「兵」の字を図案化したデザイン。"],
-  ["奈良県","近畿","https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Emblem_of_Nara_Prefecture.svg/200px-Emblem_of_Nara_Prefecture.svg.png","「奈」の字を図案化したデザイン。"],
-  ["和歌山県","近畿","https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Emblem_of_Wakayama_Prefecture.svg/200px-Emblem_of_Wakayama_Prefecture.svg.png","「和」の字を図案化したデザイン。"],
-  // 中国・四国
-  ["鳥取県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Emblem_of_Tottori_Prefecture.svg/200px-Emblem_of_Tottori_Prefecture.svg.png","「鳥」の字を図案化したデザイン。"],
-  ["島根県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Emblem_of_Shimane_Prefecture.svg/200px-Emblem_of_Shimane_Prefecture.svg.png","「島」の字を図案化したデザイン。"],
-  ["岡山県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Emblem_of_Okayama_Prefecture.svg/200px-Emblem_of_Okayama_Prefecture.svg.png","「岡」の字を図案化したデザイン。"],
-  ["広島県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Emblem_of_Hiroshima_Prefecture.svg/200px-Emblem_of_Hiroshima_Prefecture.svg.png","「広」の字を図案化したデザイン。"],
-  ["山口県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Emblem_of_Yamaguchi_Prefecture.svg/200px-Emblem_of_Yamaguchi_Prefecture.svg.png","「山」の字を図案化したデザイン。"],
-  ["徳島県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Emblem_of_Tokushima_Prefecture.svg/200px-Emblem_of_Tokushima_Prefecture.svg.png","「徳」の字を図案化したデザイン。"],
-  ["香川県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Emblem_of_Kagawa_Prefecture.svg/200px-Emblem_of_Kagawa_Prefecture.svg.png","「香」の字を図案化したデザイン。"],
-  ["愛媛県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Emblem_of_Ehime_Prefecture.svg/200px-Emblem_of_Ehime_Prefecture.svg.png","「愛」の字を図案化したデザイン。"],
-  ["高知県","中国・四国","https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Emblem_of_Kochi_Prefecture.svg/200px-Emblem_of_Kochi_Prefecture.svg.png","「高」の字を図案化したデザイン。"],
-  // 九州・沖縄
-  ["福岡県","九州・沖縄","https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Emblem_of_Fukuoka_Prefecture.svg/200px-Emblem_of_Fukuoka_Prefecture.svg.png","「福」の字を図案化したデザイン。"],
-  ["佐賀県","九州・沖縄","https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Saga_Prefecture.svg/200px-Emblem_of_Saga_Prefecture.svg.png","「佐」の字を図案化したデザイン。"],
-  ["長崎県","九州・沖縄","https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Emblem_of_Nagasaki_Prefecture.svg/200px-Emblem_of_Nagasaki_Prefecture.svg.png","「長」の字を図案化したデザイン。"],
-  ["熊本県","九州・沖縄","https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Emblem_of_Kumamoto_Prefecture.svg/200px-Emblem_of_Kumamoto_Prefecture.svg.png","「熊」の字を図案化したデザイン。"],
-  ["大分県","九州・沖縄","https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Emblem_of_Oita_Prefecture.svg/200px-Emblem_of_Oita_Prefecture.svg.png","「大」の字を図案化したデザイン。"],
-  ["宮崎県","九州・沖縄","https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Emblem_of_Miyazaki_Prefecture.svg/200px-Emblem_of_Miyazaki_Prefecture.svg.png","「宮」の字を図案化したデザイン。"],
-  ["鹿児島県","九州・沖縄","https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Emblem_of_Kagoshima_Prefecture.svg/200px-Emblem_of_Kagoshima_Prefecture.svg.png","「鹿」の字を図案化したデザイン。"],
-  ["沖縄県","九州・沖縄","https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Emblem_of_Okinawa_Prefecture.svg/200px-Emblem_of_Okinawa_Prefecture.svg.png","「沖」の字を図案化したデザイン。"],
+const KENSHO_BANK = [
+  ["北海道","北海道・東北","北","#1e3a8a","#fff","「北」の字を五角形の星形に図案化。"],
+  ["青森県","北海道・東北","青","#065f46","#fff","「青」の字を図案化したデザイン。"],
+  ["岩手県","北海道・東北","岩","#1e40af","#fff","「岩」の字を図案化したデザイン。"],
+  ["宮城県","北海道・東北","宮","#7c2d12","#fff","「宮」の字を図案化したデザイン。"],
+  ["秋田県","北海道・東北","秋","#92400e","#fff","「秋」の字を図案化したデザイン。"],
+  ["山形県","北海道・東北","山","#1e3a8a","#fff","「山」の字を図案化したデザイン。"],
+  ["福島県","北海道・東北","福","#065f46","#fff","「福」の字を図案化したデザイン。"],
+  ["茨城県","関東","茨","#1e40af","#fff","「茨」の字を図案化したデザイン。"],
+  ["栃木県","関東","ト","#7c3aed","#fff","「ト」のカタカナを図案化したデザイン。"],
+  ["群馬県","関東","群","#b45309","#fff","「群」の字を図案化したデザイン。"],
+  ["埼玉県","関東","サ","#1d4ed8","#fff","「サ」のカタカナを図案化したデザイン。"],
+  ["千葉県","関東","千","#dc2626","#fff","「千」の字を図案化したデザイン。"],
+  ["東京都","関東","東","#1e3a8a","#fff","「東」の字を六角形に図案化したデザイン。"],
+  ["神奈川県","関東","神","#065f46","#fff","「神」の字を図案化したデザイン。"],
+  ["新潟県","中部","潟","#1e40af","#fff","「潟」の字を図案化したデザイン。"],
+  ["富山県","中部","富","#7c2d12","#fff","「富」の字を図案化したデザイン。"],
+  ["石川県","中部","石","#1e3a8a","#fff","「石」の字を図案化したデザイン。"],
+  ["福井県","中部","福","#065f46","#fff","「福」の字を図案化したデザイン。"],
+  ["山梨県","中部","山","#7c3aed","#fff","「山」の字を図案化したデザイン。"],
+  ["長野県","中部","長","#1d4ed8","#fff","「長」の字を図案化したデザイン。"],
+  ["岐阜県","中部","岐","#b45309","#fff","「岐」の字を図案化したデザイン。"],
+  ["静岡県","中部","静","#065f46","#fff","「静」の字を図案化したデザイン。"],
+  ["愛知県","中部","愛","#dc2626","#fff","「愛」の字を図案化したデザイン。"],
+  ["三重県","近畿","三","#1e3a8a","#fff","「三」の字を三本線で図案化したデザイン。"],
+  ["滋賀県","近畿","滋","#065f46","#fff","「滋」の字を図案化したデザイン。"],
+  ["京都府","近畿","京","#7c2d12","#fff","「京」の字を図案化したデザイン。"],
+  ["大阪府","近畿","大","#1e40af","#fff","「大」の字を図案化したデザイン。"],
+  ["兵庫県","近畿","兵","#7c3aed","#fff","「兵」の字を図案化したデザイン。"],
+  ["奈良県","近畿","奈","#b45309","#fff","「奈」の字を図案化したデザイン。"],
+  ["和歌山県","近畿","和","#1d4ed8","#fff","「和」の字を図案化したデザイン。"],
+  ["鳥取県","中国・四国","鳥","#1e3a8a","#fff","「鳥」の字を図案化したデザイン。"],
+  ["島根県","中国・四国","島","#065f46","#fff","「島」の字を図案化したデザイン。"],
+  ["岡山県","中国・四国","岡","#7c2d12","#fff","「岡」の字を図案化したデザイン。"],
+  ["広島県","中国・四国","広","#1e40af","#fff","「広」の字を図案化したデザイン。"],
+  ["山口県","中国・四国","山","#7c3aed","#fff","「山」の字を図案化したデザイン。"],
+  ["徳島県","中国・四国","徳","#b45309","#fff","「徳」の字を図案化したデザイン。"],
+  ["香川県","中国・四国","香","#1d4ed8","#fff","「香」の字を図案化したデザイン。"],
+  ["愛媛県","中国・四国","愛","#dc2626","#fff","「愛」の字を図案化したデザイン。"],
+  ["高知県","中国・四国","高","#065f46","#fff","「高」の字を図案化したデザイン。"],
+  ["福岡県","九州・沖縄","福","#1e3a8a","#fff","「福」の字を図案化したデザイン。"],
+  ["佐賀県","九州・沖縄","佐","#7c2d12","#fff","「佐」の字を図案化したデザイン。"],
+  ["長崎県","九州・沖縄","長","#1e40af","#fff","「長」の字を図案化したデザイン。"],
+  ["熊本県","九州・沖縄","熊","#7c3aed","#fff","「熊」の字を図案化したデザイン。"],
+  ["大分県","九州・沖縄","大","#b45309","#fff","「大」の字を図案化したデザイン。"],
+  ["宮崎県","九州・沖縄","宮","#1d4ed8","#fff","「宮」の字を図案化したデザイン。"],
+  ["鹿児島県","九州・沖縄","鹿","#065f46","#fff","「鹿」の字を図案化したデザイン。"],
+  ["沖縄県","九州・沖縄","沖","#dc2626","#fff","「沖」の字を図案化したデザイン。"],
 ];
-
-const ALL_REGIONS = ["北海道・東北","関東","中部","近畿","中国・四国","九州・沖縄"];
-const ALL_PREFS = KENSH0_BANK.map(p => p[0]);
+const ALL_PREFS = KENSHO_BANK.map(p=>p[0]);
 </script>
 <script type="text/babel">
 const { useState, useEffect } = React;
@@ -132,24 +90,45 @@ const QUIZ_KEY = "rv_kensho";
 const Q_OPTIONS = [5, 10, 15, 20];
 const BTN = "linear-gradient(135deg,#3b82f6,#1d4ed8)";
 
-function pickProblems(diff, total) {
-  let bank = diff === "mix" ? [...KENSH0_BANK]
-    : KENSH0_BANK.filter(p => p[1] === diff);
-  if (bank.length === 0) bank = [...KENSH0_BANK];
+// 県章をSVGで描画（外部画像不要）
+function Emblem({ char, bg, fg }) {
+  return (
+    <svg width="140" height="140" viewBox="0 0 140 140"
+      style={{display:"block",margin:"0 auto",filter:"drop-shadow(0 4px 8px rgba(0,0,0,0.15))"}}>
+      {/* 六角形の背景 */}
+      <polygon points="70,8 126,39 126,101 70,132 14,101 14,39"
+        fill={bg} stroke="rgba(255,255,255,0.3)" strokeWidth="2"/>
+      {/* 内側の輪 */}
+      <polygon points="70,22 112,46 112,94 70,118 28,94 28,46"
+        fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5"/>
+      {/* 漢字 */}
+      <text x="70" y="88" textAnchor="middle"
+        fontSize="54" fontWeight="900" fill={fg}
+        fontFamily="'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif"
+        style={{letterSpacing:0}}>
+        {char}
+      </text>
+    </svg>
+  );
+}
 
-  const pool = bank.map(([name, region, img, exp]) => {
-    // 不正解：同じ地方から優先、足りなければ全国から
-    const sameRegion = KENSH0_BANK.filter(p => p[0] !== name && p[1] === region).map(p => p[0]);
+function pickProblems(diff, total) {
+  let bank = diff === "mix" ? [...KENSHO_BANK]
+    : KENSHO_BANK.filter(p => p[1] === diff);
+  if (bank.length === 0) bank = [...KENSHO_BANK];
+
+  const pool = bank.map(([name, region, char, bg, fg, exp]) => {
+    const sameRegion = KENSHO_BANK.filter(p => p[0] !== name && p[1] === region).map(p => p[0]);
     const others = ALL_PREFS.filter(p => p !== name && !sameRegion.includes(p));
     const wrongPool = shuffle([...sameRegion, ...others]);
     const wrongs = wrongPool.slice(0, 3);
     const opts = shuffle([name, ...wrongs]);
     return {
-      color:"#1d4ed8", title:"県章はどの都道府県？",
-      word: name, img, region, exp,
-      question: "この県章はどの都道府県のものですか？",
-      options: opts, answer: opts.indexOf(name),
-      explanation: `【${name}】${region}\n${exp}`,
+      color:bg, title:"県章はどの都道府県？",
+      word:name, char, bg, fg, region, exp,
+      question:"この県章はどの都道府県のものですか？",
+      options:opts, answer:opts.indexOf(name),
+      explanation:`【${name}】${region}\n${exp}`,
     };
   });
 
@@ -214,7 +193,7 @@ function App() {
     const reshuffled = bank.map(p => {
       const correctOpt = p.options[p.answer];
       const opts = shuffle([...p.options]);
-      return {...p, options: opts, answer: opts.indexOf(correctOpt)};
+      return {...p, options:opts, answer:opts.indexOf(correctOpt)};
     });
     setProblems(reshuffled);
     setCurrent(0); setScore(0); setStreak(0);
@@ -237,24 +216,13 @@ function App() {
     const ok = ans === problem.answer;
     setIsCorrect(ok);
     if (ok) {
-      setScore(s => s+1); const ns=streak+1; setStreak(ns);
-      if (ns>best) { setBest(ns); saveBest(ns); }
-      setCeleb(true); setTimeout(() => setCeleb(false), 1800);
-      try {
-        const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
-        const id=problem.word;
-        const i=b.findIndex(x=>x._id===id);
-        if(i>=0){b[i].ok=(b[i].ok||0)+1;if(b[i].ok>=5)b.splice(i,1);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}
-        setReviewBank([...b]);
-      } catch(_) {}
+      setScore(s=>s+1); const ns=streak+1; setStreak(ns);
+      if(ns>best){setBest(ns);saveBest(ns);}
+      setCeleb(true); setTimeout(()=>setCeleb(false),1800);
+      try{const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');const id=problem.word;const i=b.findIndex(x=>x._id===id);if(i>=0){b[i].ok=(b[i].ok||0)+1;if(b[i].ok>=5)b.splice(i,1);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
     } else {
       setStreak(0);
-      try {
-        const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
-        const id=problem.word;
-        if(!b.find(x=>x._id===id)){const s={...problem,_id:id,ok:0};b.push(s);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}
-        setReviewBank([...b]);
-      } catch(_) {}
+      try{const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');const id=problem.word;if(!b.find(x=>x._id===id)){const s={...problem,_id:id,ok:0};b.push(s);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
     }
   };
 
@@ -267,20 +235,20 @@ function App() {
       return;
     }
     if (_end) { setMode("result"); return; }
-    setCurrent(c => c+1);
+    setCurrent(c=>c+1);
     setChecked(false); setUserAnswer(null); setCeleb(false);
   };
 
   const progress = problem ? (current/problems.length)*100 : 0;
 
   const DIFF_OPTIONS = [
-    {key:"mix",        emoji:"🗾", name:"全国ミックス",      desc:"47都道府県からランダム出題"},
-    {key:"北海道・東北",emoji:"⛄", name:"北海道・東北",      desc:"北海道・青森・岩手・宮城・秋田・山形・福島"},
-    {key:"関東",       emoji:"🗼", name:"関東",              desc:"茨城・栃木・群馬・埼玉・千葉・東京・神奈川"},
-    {key:"中部",       emoji:"🗻", name:"中部",              desc:"新潟・富山・石川・福井・山梨・長野・岐阜・静岡・愛知"},
-    {key:"近畿",       emoji:"⛩️", name:"近畿",              desc:"三重・滋賀・京都・大阪・兵庫・奈良・和歌山"},
-    {key:"中国・四国", emoji:"🌊", name:"中国・四国",        desc:"鳥取・島根・岡山・広島・山口・徳島・香川・愛媛・高知"},
-    {key:"九州・沖縄", emoji:"🌺", name:"九州・沖縄",        desc:"福岡・佐賀・長崎・熊本・大分・宮崎・鹿児島・沖縄"},
+    {key:"mix",        emoji:"🗾", name:"全国ミックス",  desc:"47都道府県からランダム出題"},
+    {key:"北海道・東北",emoji:"⛄", name:"北海道・東北",  desc:"北海道・青森・岩手・宮城・秋田・山形・福島"},
+    {key:"関東",       emoji:"🗼", name:"関東",          desc:"茨城・栃木・群馬・埼玉・千葉・東京・神奈川"},
+    {key:"中部",       emoji:"🗻", name:"中部",          desc:"新潟・富山・石川・福井・山梨・長野・岐阜・静岡・愛知"},
+    {key:"近畿",       emoji:"⛩️", name:"近畿",          desc:"三重・滋賀・京都・大阪・兵庫・奈良・和歌山"},
+    {key:"中国・四国", emoji:"🌊", name:"中国・四国",    desc:"鳥取・島根・岡山・広島・山口・徳島・香川・愛媛・高知"},
+    {key:"九州・沖縄", emoji:"🌺", name:"九州・沖縄",    desc:"福岡・佐賀・長崎・熊本・大分・宮崎・鹿児島・沖縄"},
   ];
 
   if (mode === "graduated") return (
@@ -308,18 +276,13 @@ function App() {
         <p className="setup-sub">47都道府県の県章を覚えよう！</p>
         <div style={{marginBottom:"16px"}}>
           <button onClick={()=>{if(reviewBank.length>0)startReview();}}
-            style={{width:"100%",padding:"14px 16px",borderRadius:"14px",
-              cursor:reviewBank.length>0?"pointer":"default",
-              border:reviewBank.length>0?"2px solid #ef4444":"2px solid #e5e7eb",
-              background:reviewBank.length>0?"#fef2f2":"#f9fafb",
-              display:"flex",alignItems:"center",justifyContent:"space-between",
-              fontFamily:"inherit",opacity:reviewBank.length===0?0.45:1}}>
+            style={{width:"100%",padding:"14px 16px",borderRadius:"14px",cursor:reviewBank.length>0?"pointer":"default",border:reviewBank.length>0?"2px solid #ef4444":"2px solid #e5e7eb",background:reviewBank.length>0?"#fef2f2":"#f9fafb",display:"flex",alignItems:"center",justifyContent:"space-between",fontFamily:"inherit",opacity:reviewBank.length===0?0.45:1}}>
             <div style={{textAlign:"left"}}>
               <div style={{fontWeight:"900",fontSize:"15px",color:reviewBank.length>0?"#b91c1c":"#374151"}}>{"📚 復習モード"}</div>
               {reviewBank.length>0&&<div style={{fontSize:"11px",color:"#ef4444",marginTop:"2px"}}>{"タップして今すぐ開始！"}</div>}
             </div>
             <span style={{background:reviewBank.length>0?"#ef4444":"#d1d5db",color:"#fff",borderRadius:"99px",padding:"4px 12px",fontSize:"13px",fontWeight:"bold"}}>
-              {reviewBank.length>0?reviewBank.length+"問":"なし"}
+              {reviewBank.length>0?reviewBank.length+"県":"なし"}
             </span>
           </button>
           {reviewBank.length===0&&<div style={{fontSize:"11px",color:"#9ca3af",textAlign:"center",marginTop:"4px"}}>{"間違えた県章が溜まるとここで復習できます"}</div>}
@@ -327,11 +290,9 @@ function App() {
         {best>0&&<div className="best-badge" style={{background:"#dbeafe",border:"1.5px solid #93c5fd",color:"#1e3a8a"}}>🏆 最高連続記録：<strong>{best}問</strong></div>}
         <div className="qcount-section">地方を選ぶ</div>
         <div className="diff-btn-row">
-          {DIFF_OPTIONS.map(d => (
+          {DIFF_OPTIONS.map(d=>(
             <button key={d.key} className="diff-card-btn"
-              style={{background:diff===d.key?"#dbeafe":"#f9fafb",
-                      border:diff===d.key?"2px solid #3b82f6":"2px solid #e5e7eb",
-                      boxShadow:diff===d.key?"0 3px 0 #3b82f6":"none"}}
+              style={{background:diff===d.key?"#dbeafe":"#f9fafb",border:diff===d.key?"2px solid #3b82f6":"2px solid #e5e7eb",boxShadow:diff===d.key?"0 3px 0 #3b82f6":"none"}}
               onClick={()=>setDiff(d.key)}>
               <span style={{fontSize:"22px"}}>{d.emoji}</span>
               <div>
@@ -344,12 +305,9 @@ function App() {
         </div>
         <div className="qcount-section">何問やる？</div>
         <div className="qcount-grid">
-          {Q_OPTIONS.map(n => (
+          {Q_OPTIONS.map(n=>(
             <button key={n} className="qcount-btn"
-              style={{border:totalQ===n?"2px solid #3b82f6":"2px solid #dee2e6",
-                      background:totalQ===n?"#3b82f6":"#f8f9fa",
-                      color:totalQ===n?"#fff":"#495057",
-                      boxShadow:totalQ===n?"0 3px 0 #1d4ed8":"none"}}
+              style={{border:totalQ===n?"2px solid #3b82f6":"2px solid #dee2e6",background:totalQ===n?"#3b82f6":"#f8f9fa",color:totalQ===n?"#fff":"#495057",boxShadow:totalQ===n?"0 3px 0 #1d4ed8":"none"}}
               onClick={()=>setTotalQ(n)}>{n}問</button>
           ))}
         </div>
@@ -378,8 +336,7 @@ function App() {
           </div>
           {reviewBank.length>0&&(
             <button className="start-btn"
-              style={{background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",
-                boxShadow:"0 4px 0 #991b1b",marginTop:"8px",width:"100%"}}
+              style={{background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",boxShadow:"0 4px 0 #991b1b",marginTop:"8px",width:"100%"}}
               onClick={startReview}>{"続けて復習する 📚 ("}{reviewBank.length}{"県)"}</button>
           )}
         </div>
@@ -391,7 +348,7 @@ function App() {
 
   return (
     <div className="rika-root">
-      {celeb && (
+      {celeb&&(
         <div className="celeb-overlay">
           <div className="celeb-box">
             <div className="celeb-emoji">🎉</div>
@@ -412,16 +369,15 @@ function App() {
       </div>
       <div className="problem-card" style={{borderTop:`5px solid ${problem.color}`}}>
         <div style={{fontWeight:"900",fontSize:"12px",color:problem.color,marginBottom:"6px"}}>{problem.title}</div>
-        <div className="emblem-box">
-          <img src={problem.img} alt="県章" loading="lazy"
-            onError={e=>{e.target.style.display='none';}}/>
+        <div className="emblem-wrap">
+          <Emblem char={problem.char} bg={problem.bg} fg={problem.fg}/>
         </div>
         <div style={{textAlign:"center",marginBottom:"12px"}}>
           <span className="region-tag">{problem.region}</span>
         </div>
         <SelectAnswer problem={problem} checked={checked} userAnswer={userAnswer} onAnswer={handleAnswer}/>
       </div>
-      {checked && (
+      {checked&&(
         <>
           <div style={{textAlign:"center",fontSize:"18px",fontWeight:"900",color:isCorrect?"#10b981":"#ef4444"}}>
             {isCorrect?"⭕ 正解！":"❌ 不正解"}
