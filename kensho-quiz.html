@@ -108,7 +108,7 @@ function pickProblems(diff, total) {
     : KENSHO_BANK.filter(p => p[1] === diff);
   if (bank.length === 0) bank = [...KENSHO_BANK];
 
-  const pool = bank.map(([name, region, char, bg, fg, exp]) => {
+  const pool = bank.map(([name, region, src, exp]) => {
     const sameRegion = KENSHO_BANK.filter(p => p[0] !== name && p[1] === region).map(p => p[0]);
     const others = ALL_PREFS.filter(p => p !== name && !sameRegion.includes(p));
     const wrongPool = shuffle([...sameRegion, ...others]);
@@ -362,9 +362,6 @@ function App() {
         <div style={{fontWeight:"900",fontSize:"12px",color:problem.color,marginBottom:"6px"}}>{problem.title}</div>
         <div className="emblem-wrap">
           <Emblem src={problem.src} name={problem.word}/>
-        </div>
-        <div style={{textAlign:"center",marginBottom:"12px"}}>
-          <span className="region-tag">{problem.region}</span>
         </div>
         <SelectAnswer problem={problem} checked={checked} userAnswer={userAnswer} onAnswer={handleAnswer}/>
       </div>
