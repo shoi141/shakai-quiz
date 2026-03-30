@@ -33,54 +33,55 @@ function randomStars(n){return Array.from({length:n},()=>["⭐","🌟","✨"][ra
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 const KENSHO_BANK = [
-  ["北海道","北海道・東北","北","#1e3a8a","#fff","「北」の字を五角形の星形に図案化。"],
-  ["青森県","北海道・東北","青","#065f46","#fff","「青」の字を図案化したデザイン。"],
-  ["岩手県","北海道・東北","岩","#1e40af","#fff","「岩」の字を図案化したデザイン。"],
-  ["宮城県","北海道・東北","宮","#7c2d12","#fff","「宮」の字を図案化したデザイン。"],
-  ["秋田県","北海道・東北","秋","#92400e","#fff","「秋」の字を図案化したデザイン。"],
-  ["山形県","北海道・東北","山","#1e3a8a","#fff","「山」の字を図案化したデザイン。"],
-  ["福島県","北海道・東北","福","#065f46","#fff","「福」の字を図案化したデザイン。"],
-  ["茨城県","関東","茨","#1e40af","#fff","「茨」の字を図案化したデザイン。"],
-  ["栃木県","関東","ト","#7c3aed","#fff","「ト」のカタカナを図案化したデザイン。"],
-  ["群馬県","関東","群","#b45309","#fff","「群」の字を図案化したデザイン。"],
-  ["埼玉県","関東","サ","#1d4ed8","#fff","「サ」のカタカナを図案化したデザイン。"],
-  ["千葉県","関東","千","#dc2626","#fff","「千」の字を図案化したデザイン。"],
-  ["東京都","関東","東","#1e3a8a","#fff","「東」の字を六角形に図案化したデザイン。"],
-  ["神奈川県","関東","神","#065f46","#fff","「神」の字を図案化したデザイン。"],
-  ["新潟県","中部","潟","#1e40af","#fff","「潟」の字を図案化したデザイン。"],
-  ["富山県","中部","富","#7c2d12","#fff","「富」の字を図案化したデザイン。"],
-  ["石川県","中部","石","#1e3a8a","#fff","「石」の字を図案化したデザイン。"],
-  ["福井県","中部","福","#065f46","#fff","「福」の字を図案化したデザイン。"],
-  ["山梨県","中部","山","#7c3aed","#fff","「山」の字を図案化したデザイン。"],
-  ["長野県","中部","長","#1d4ed8","#fff","「長」の字を図案化したデザイン。"],
-  ["岐阜県","中部","岐","#b45309","#fff","「岐」の字を図案化したデザイン。"],
-  ["静岡県","中部","静","#065f46","#fff","「静」の字を図案化したデザイン。"],
-  ["愛知県","中部","愛","#dc2626","#fff","「愛」の字を図案化したデザイン。"],
-  ["三重県","近畿","三","#1e3a8a","#fff","「三」の字を三本線で図案化したデザイン。"],
-  ["滋賀県","近畿","滋","#065f46","#fff","「滋」の字を図案化したデザイン。"],
-  ["京都府","近畿","京","#7c2d12","#fff","「京」の字を図案化したデザイン。"],
-  ["大阪府","近畿","大","#1e40af","#fff","「大」の字を図案化したデザイン。"],
-  ["兵庫県","近畿","兵","#7c3aed","#fff","「兵」の字を図案化したデザイン。"],
-  ["奈良県","近畿","奈","#b45309","#fff","「奈」の字を図案化したデザイン。"],
-  ["和歌山県","近畿","和","#1d4ed8","#fff","「和」の字を図案化したデザイン。"],
-  ["鳥取県","中国・四国","鳥","#1e3a8a","#fff","「鳥」の字を図案化したデザイン。"],
-  ["島根県","中国・四国","島","#065f46","#fff","「島」の字を図案化したデザイン。"],
-  ["岡山県","中国・四国","岡","#7c2d12","#fff","「岡」の字を図案化したデザイン。"],
-  ["広島県","中国・四国","広","#1e40af","#fff","「広」の字を図案化したデザイン。"],
-  ["山口県","中国・四国","山","#7c3aed","#fff","「山」の字を図案化したデザイン。"],
-  ["徳島県","中国・四国","徳","#b45309","#fff","「徳」の字を図案化したデザイン。"],
-  ["香川県","中国・四国","香","#1d4ed8","#fff","「香」の字を図案化したデザイン。"],
-  ["愛媛県","中国・四国","愛","#dc2626","#fff","「愛」の字を図案化したデザイン。"],
-  ["高知県","中国・四国","高","#065f46","#fff","「高」の字を図案化したデザイン。"],
-  ["福岡県","九州・沖縄","福","#1e3a8a","#fff","「福」の字を図案化したデザイン。"],
-  ["佐賀県","九州・沖縄","佐","#7c2d12","#fff","「佐」の字を図案化したデザイン。"],
-  ["長崎県","九州・沖縄","長","#1e40af","#fff","「長」の字を図案化したデザイン。"],
-  ["熊本県","九州・沖縄","熊","#7c3aed","#fff","「熊」の字を図案化したデザイン。"],
-  ["大分県","九州・沖縄","大","#b45309","#fff","「大」の字を図案化したデザイン。"],
-  ["宮崎県","九州・沖縄","宮","#1d4ed8","#fff","「宮」の字を図案化したデザイン。"],
-  ["鹿児島県","九州・沖縄","鹿","#065f46","#fff","「鹿」の字を図案化したデザイン。"],
-  ["沖縄県","九州・沖縄","沖","#dc2626","#fff","「沖」の字を図案化したデザイン。"],
+  ["北海道","北海道・東北","kensyo/01-hokkaido-kensho-kennashi.jpg","「北」の字を七光星に図案化。開拓者精神と北海道の未来を表す。"],
+  ["青森県","北海道・東北","kensyo/02-aomori-kensho-kennashi.jpg","青森県の地形を図案化。深緑色は躍進発展する希望と未来を表す。"],
+  ["岩手県","北海道・東北","kensyo/03-iwate-kensho-kennashi.jpg","「岩」の字を図案化。躍進する岩手を表す。"],
+  ["宮城県","北海道・東北","kensyo/04-miyagi-kensho-kennashi.jpg","「ミヤギノハギ」と「み」の字を図案化。"],
+  ["秋田県","北海道・東北","kensyo/05-akita-kensho-kennashi.jpg","「ア」のカタカナを図案化。県の発展する姿を表す。"],
+  ["山形県","北海道・東北","kensyo/06-yamagata-kensho-kennashi.jpg","三つの山と最上川の流れを表す。"],
+  ["福島県","北海道・東北","kensyo/07-fukushima-kensho-kennashi.jpg","「ふ」の字を図案化。県民の融和と団結を表す。"],
+  ["茨城県","関東","kensyo/08-ibaraki-kensho-kennashi.jpg","バラのつぼみを象徴化。先進性・躍動を表す。"],
+  ["栃木県","関東","kensyo/09-tochigi-kensho-kennashi.jpg","「ト」のカタカナを図案化したデザイン。"],
+  ["群馬県","関東","kensyo/10-gunma-kensho-kennashi.jpg","「群」の字を図案化したデザイン。"],
+  ["埼玉県","関東","kensyo/11-saitama-kensho-kennashi.jpg","「サ」のカタカナを図案化したデザイン。"],
+  ["千葉県","関東","kensyo/12-chiba-kensho-kennashi.jpg","「千」の字を図案化したデザイン。"],
+  ["東京都","関東","kensyo/13-tokyo-kensho-kennashi.jpg","銀杏の葉をモチーフにしたシンボルマーク。"],
+  ["神奈川県","関東","kensyo/14-kanagawa-kensho-kennashi.jpg","「神」の字を図案化したデザイン。"],
+  ["新潟県","中部","kensyo/15-niigata-kensho-kennashi.jpg","新潟県のシンボルマーク。"],
+  ["富山県","中部","kensyo/16-toyama-kensho-kennashi.jpg","「富」の字を図案化したデザイン。"],
+  ["石川県","中部","kensyo/17-ishikawa-kensho-kennashi.jpg","石川県は県章を制定していないため県旗標章を使用。"],
+  ["福井県","中部","kensyo/18-fukui-kensho-kennashi.jpg","「福」の字を図案化したデザイン。"],
+  ["山梨県","中部","kensyo/19-yamanashi-kensho-kennashi.jpg","「山」の字を図案化したデザイン。"],
+  ["長野県","中部","kensyo/20-nagano-kensho-kennashi.jpg","「長」の字を図案化したデザイン。"],
+  ["岐阜県","中部","kensyo/21-gifu-kensho-kennashi.jpg","「岐」の字を図案化した徽章。"],
+  ["静岡県","中部","kensyo/22-shizuoka-kensho-kennashi.jpg","「静」の字を図案化したデザイン。"],
+  ["愛知県","中部","kensyo/23-aichi-kensho-kennashi.jpg","「愛」の字を図案化したデザイン。"],
+  ["三重県","近畿","kensyo/24-mie-kensho-kennashi.jpg","「三」の字を三本線で図案化したデザイン。"],
+  ["滋賀県","近畿","kensyo/25-shiga-kensho-kennashi.jpg","「滋」の字を図案化したデザイン。"],
+  ["京都府","近畿","kensyo/26-kyoto-kensho-kennashi.jpg","「京」の字を図案化したデザイン。"],
+  ["大阪府","近畿","kensyo/27-osaka-kensho-kennashi.jpg","「大」の字を図案化したデザイン。"],
+  ["兵庫県","近畿","kensyo/28-hyogo-kensho-kennashi.jpg","兵庫県は県章よりも県旗が代表マークとして使われる。"],
+  ["奈良県","近畿","kensyo/29-nara-kensho-kennashi.jpg","「奈」の字を図案化したデザイン。"],
+  ["和歌山県","近畿","kensyo/30-wakayama-kensho-kennashi.jpg","「和」の字を図案化したデザイン。"],
+  ["鳥取県","中国・四国","kensyo/31-tottori-kensho-kennashi.jpg","「鳥」の字を図案化したデザイン。"],
+  ["島根県","中国・四国","kensyo/32-shimane-kensho-kennashi.jpg","「島」の字を図案化したデザイン。"],
+  ["岡山県","中国・四国","kensyo/33-okayama-kensho-kennashi.jpg","「岡」の字を図案化したデザイン。"],
+  ["広島県","中国・四国","kensyo/34-hiroshima-kensho-kennashi.jpg","「広」の字を図案化したデザイン。"],
+  ["山口県","中国・四国","kensyo/35-yamaguchi-kensho-kennashi.jpg","「山」の字を図案化したデザイン。"],
+  ["徳島県","中国・四国","kensyo/36-tokushima-kensho-kennashi.jpg","「徳」の字を図案化したデザイン。"],
+  ["香川県","中国・四国","kensyo/37-kagawa-kensho-kennashi.jpg","「香」の字を図案化したデザイン。"],
+  ["愛媛県","中国・四国","kensyo/38-ehime-kensho-kennashi.jpg","「愛」の字を図案化したデザイン。"],
+  ["高知県","中国・四国","kensyo/39-kochi-kensho-kennashi.jpg","「高」の字を図案化したデザイン。"],
+  ["福岡県","九州・沖縄","kensyo/40-fukuoka-kensho-kennashi.jpg","「福」の字を図案化したデザイン。"],
+  ["佐賀県","九州・沖縄","kensyo/41-saga-kensho-kennashi.jpg","「佐」の字を図案化したデザイン。"],
+  ["長崎県","九州・沖縄","kensyo/42-nagasaki-kensho-kennashi.jpg","1991年制定の近代的なデザイン。"],
+  ["熊本県","九州・沖縄","kensyo/43-kumamoto-kensho-kennashi.jpg","「熊」の字を図案化したデザイン。"],
+  ["大分県","九州・沖縄","kensyo/44-oita-kensho-kennashi.jpg","「大」の字を図案化した徽章。"],
+  ["宮崎県","九州・沖縄","kensyo/45-miyazaki-kensho-kennashi.jpg","「宮」の字を図案化した旗章。"],
+  ["鹿児島県","九州・沖縄","kensyo/46-kagoshima-kensho-kennashi.jpg","鹿児島県のシンボルマーク。"],
+  ["沖縄県","九州・沖縄","kensyo/47-okinawa-kensho-kennashi.jpg","「沖」の字を図案化したデザイン。"],
 ];
+const ALL_PREFS = KENSHO_BANK.map(p=>p[0]);
 const ALL_PREFS = KENSHO_BANK.map(p=>p[0]);
 </script>
 <script type="text/babel">
@@ -91,24 +92,15 @@ const Q_OPTIONS = [5, 10, 15, 20];
 const BTN = "linear-gradient(135deg,#3b82f6,#1d4ed8)";
 
 // 県章をSVGで描画（外部画像不要）
-function Emblem({ char, bg, fg }) {
+function Emblem({ src, name }) {
   return (
-    <svg width="140" height="140" viewBox="0 0 140 140"
-      style={{display:"block",margin:"0 auto",filter:"drop-shadow(0 4px 8px rgba(0,0,0,0.15))"}}>
-      {/* 六角形の背景 */}
-      <polygon points="70,8 126,39 126,101 70,132 14,101 14,39"
-        fill={bg} stroke="rgba(255,255,255,0.3)" strokeWidth="2"/>
-      {/* 内側の輪 */}
-      <polygon points="70,22 112,46 112,94 70,118 28,94 28,46"
-        fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5"/>
-      {/* 漢字 */}
-      <text x="70" y="88" textAnchor="middle"
-        fontSize="54" fontWeight="900" fill={fg}
-        fontFamily="'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif"
-        style={{letterSpacing:0}}>
-        {char}
-      </text>
-    </svg>
+    <div style={{width:"150px",height:"150px",display:"flex",alignItems:"center",
+      justifyContent:"center",background:"#fff",borderRadius:"16px",
+      boxShadow:"0 4px 16px rgba(0,0,0,0.10)",margin:"0 auto",padding:"12px"}}>
+      <img src={src} alt={name+"の県章"} style={{width:"120px",height:"120px",objectFit:"contain"}}
+        onError={e=>{e.target.style.display="none";
+          e.target.parentNode.innerHTML='<div style="font-size:13px;color:#9ca3af;text-align:center">画像<br/>準備中</div>';}}/>
+    </div>
   );
 }
 
@@ -124,8 +116,8 @@ function pickProblems(diff, total) {
     const wrongs = wrongPool.slice(0, 3);
     const opts = shuffle([name, ...wrongs]);
     return {
-      color:bg, title:"県章はどの都道府県？",
-      word:name, char, bg, fg, region, exp,
+      color:"#1d4ed8", title:"県章はどの都道府県？",
+      word:name, src, region, exp,
       question:"この県章はどの都道府県のものですか？",
       options:opts, answer:opts.indexOf(name),
       explanation:`【${name}】${region}\n${exp}`,
@@ -370,7 +362,7 @@ function App() {
       <div className="problem-card" style={{borderTop:`5px solid ${problem.color}`}}>
         <div style={{fontWeight:"900",fontSize:"12px",color:problem.color,marginBottom:"6px"}}>{problem.title}</div>
         <div className="emblem-wrap">
-          <Emblem char={problem.char} bg={problem.bg} fg={problem.fg}/>
+          <Emblem src={problem.src} name={problem.word}/>
         </div>
         <div style={{textAlign:"center",marginBottom:"12px"}}>
           <span className="region-tag">{problem.region}</span>
