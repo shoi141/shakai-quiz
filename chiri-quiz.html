@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>日本の地理クイズ</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+body{background:#fff7ed;}
+.rika-root{min-height:100vh;background:#fff7ed;padding:12px;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+.select-grid{display:flex;flex-direction:column;gap:8px;}
+.select-btn{width:100%;padding:13px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;cursor:pointer;font-size:14px;font-weight:bold;text-align:left;font-family:inherit;}
+.select-btn.show-correct{background:#d1fae5;border-color:#10b981;color:#065f46;}
+.select-btn.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b;opacity:0.7;}
+.explanation-card{background:#fef3c7;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f;line-height:1.9;}
+.diff-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.diff-card-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;cursor:pointer;text-align:left;border:2px solid transparent;font-family:inherit;background:#f9fafb;}
+.diff-card-btn .diff-name{font-weight:900;font-size:15px;}
+.diff-card-btn .diff-desc{font-size:11px;color:#6b7280;margin-top:2px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randomStars(n){return Array.from({length:n},()=>["⭐","🌟","✨"][randInt(0,2)]).join(" ");}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ── 日本の位置・時差 ──────────────────────────────────────────
+// [問題文, 正解, 不正解3つ, 解説]
+const ICHI_BANK = [
+  ["日本の標準時子午線は東経何度の経線？","東経135度",["東経120度","東経150度","東経145度"],"兵庫県明石市を通る東経135度の経線。経度15度につき1時間の時差が生まれる。"],
+  ["標準時子午線が通る都市はどこ？","明石市（兵庫県）",["大阪市","神戸市","姫路市"],"東経135度の標準時子午線は兵庫県明石市を通る。"],
+  ["経度0度の経線（本初子午線）はどこの天文台を基準としている？","イギリスのグリニッジ天文台",["フランスのパリ天文台","ドイツのベルリン天文台","アメリカのワシントン天文台"],"ロンドン郊外（イギリス）の旧グリニッジ天文台が基準。"],
+  ["緯度の基準（0度）となるのは？","赤道",["北極","南極","本初子午線"],"赤道を0度として南北に90度ずつあり、南側を南緯・北側を北緯という。"],
+  ["日本の位置を緯度で表すとおよそ何度のはんい？","北緯20〜46度",["北緯10〜40度","北緯30〜60度","北緯20〜60度"],"日本はおよそ北緯20〜46度・東経122〜154度のはんいにある。"],
+  ["経度15度の差で時差は何時間？","1時間",["2時間","30分","3時間"],"地球は1時間に360÷24＝15度回転するため、経度15度につき1時間の時差が生まれる。"],
+  ["日本（東経135度）とイギリス（東経0度）の時差は何時間？","9時間",["8時間","10時間","12時間"],"135度÷15度＝9時間。日本はイギリスより9時間進んでいる。"],
+  ["大陸や海から見た日本の位置は？","ユーラシア大陸の東・太平洋の北西",["ユーラシア大陸の西・大西洋の東","アフリカ大陸の東・インド洋の北","アメリカ大陸の西・太平洋の東"],"日本はユーラシア大陸の東のはし、太平洋の北西に位置する。"],
+  ["日本の周りを囲む海のうち、西にある海は？","日本海",["東シナ海","オホーツク海","太平洋"],"日本の北はオホーツク海、東・南は太平洋、西は日本海、南西は東シナ海に囲まれている。"],
+  ["日本の北にある国は？","ロシア連邦",["中国","韓国","フィリピン"],"日本の北にロシア連邦、西に大韓民国・北朝鮮・中国、南にフィリピン・オーストラリアなどがある。"],
+  ["日本の面積はおよそ何万km²？","38万km²",["25万km²","50万km²","100万km²"],"北方領土を含む日本の面積はおよそ38万km²。世界最大のロシアのおよそ45分の1。"],
+  ["日本の形の特徴は？","北東から南西に弓なりに約3000kmの島々が連なる",["東西に約5000kmの島々が連なる","南北に約1000kmの一つの島","丸みのある三角形の島"],"日本列島は北東から南西にかけて弓なりに約3000kmにわたって大小の島々が連なる。"],
+];
+
+// ── 島・領土 ──────────────────────────────────────────────────
+const SHIMA_BANK = [
+  ["日本の4つの大きな島を北から順に並べると？","北海道・本州・四国・九州",["本州・北海道・四国・九州","北海道・本州・九州・四国","本州・四国・北海道・九州"],"日本列島は北海道・本州・四国・九州の4つの大きな島と7000近くの小さな島々から成り立っている。"],
+  ["北方領土を構成する4つの島のうち、最も面積が大きい島は？","択捉島",["国後島","色丹島","歯舞群島"],"北方領土は択捉島・国後島・歯舞群島・色丹島の4島。最大は択捉島。"],
+  ["北方領土は現在どこの国が占拠している？","ロシア連邦",["中国","アメリカ","韓国"],"太平洋戦争後に旧ソビエト連邦が占領し、現在はロシア連邦が不法に占拠している。"],
+  ["竹島は現在どこの国によって占拠されている？","大韓民国（韓国）",["中国","ロシア","北朝鮮"],"竹島は日本固有の領土だが、大韓民国（韓国）によって不法に占拠されている。"],
+  ["尖閣諸島の領有権を主張している国は？","中国",["韓国","ロシア","フィリピン"],"尖閣諸島は日本固有の領土だが、中国などが領有権を主張している。"],
+  ["日本の最北端の島は？","択捉島",["国後島","礼文島","利尻島"],"日本の最北端は北方領土の択捉島。"],
+  ["日本の最南端の島は？","沖ノ鳥島",["与那国島","石垣島","南鳥島"],"日本の端の島：北に択捉島、南に沖ノ鳥島、東に南鳥島、西に与那国島。"],
+  ["日本の最東端の島は？","南鳥島",["与那国島","沖ノ鳥島","父島"],"日本の最東端は南鳥島（東京都）。"],
+  ["日本の最西端の島は？","与那国島",["沖ノ鳥島","石垣島","宮古島"],"日本の最西端は与那国島（沖縄県）。"],
+  ["火山活動によって面積が拡大し、日本の領海も広がった島は？","西之島",["硫黄島","三宅島","桜島"],"小笠原諸島の西之島は火山活動により陸地が拡大し、日本の領海も拡大した。"],
+  ["日本の島の数は約何島？","約7000島",["約1000島","約3000島","約14000島"],"北海道・本州・四国・九州の4島と、7000近くの小さな島々から成り立っている。"],
+  ["北海道をのぞいたとき、沖縄島の次に大きい島は？","佐渡島",["淡路島","対馬","奄美大島"],"北方領土をのぞくと、沖縄島が最も大きく、次が佐渡島（新潟県）。"],
+];
+
+// ── 山地・山脈・山 ──────────────────────────────────────────
+const YAMA_BANK = [
+  ["「日本の屋根」とも呼ばれる、飛騨山脈・木曽山脈・赤石山脈の総称は？","日本アルプス",["関東山地","奥羽山脈","中国山地"],"飛騨山脈（北アルプス）・木曽山脈（中央アルプス）・赤石山脈（南アルプス）を合わせて日本アルプスという。"],
+  ["飛騨山脈の別名は？","北アルプス",["南アルプス","中央アルプス","東アルプス"],"飛騨山脈＝北アルプス、木曽山脈＝中央アルプス、赤石山脈＝南アルプス。"],
+  ["赤石山脈の別名は？","南アルプス",["北アルプス","中央アルプス","西アルプス"],"赤石山脈は南アルプスとも呼ばれ、長野県・山梨県・静岡県にまたがる。"],
+  ["日本最高峰の山は？","富士山（3776m）",["北岳","穂高岳","白山"],"富士山（3776m）は静岡県・山梨県の境にある日本最高峰の山。"],
+  ["日本第2位の高さを誇る山は？","北岳",["穂高岳","槍ヶ岳","白山"],"北岳（3193m）は山梨県にあり、富士山に次いで日本第2位の高さ。"],
+  ["東北地方を縦断する大きな山脈は？","奥羽山脈",["越後山脈","日高山脈","筑紫山地"],"奥羽山脈は東北地方の中央を南北に縦断する日本最長の山脈。"],
+  ["北海道を南北に走る山脈で、最高峰が幌尻岳のものは？","日高山脈",["北見山地","天塩山地","夕張山地"],"日高山脈は北海道の南部を南北に走る山脈。最高峰の幌尻岳（2053m）は北海道最高峰の一つ。"],
+  ["中国地方を東西に走る山地で、日本海側と瀬戸内海側を分けるのは？","中国山地",["四国山地","紀伊山地","筑紫山地"],"中国山地は中国地方を東西に走り、日本海側と瀬戸内海側を分けている。"],
+  ["四国の中央部を東西に走る山地は？","四国山地",["中国山地","紀伊山地","比叡山地"],"四国山地（四国山脈）は四国の中央部を東西に走り、四国最高峰の石鎚山がある。"],
+  ["奈良県・三重県・和歌山県にまたがる大きな山地は？","紀伊山地",["中国山地","赤石山脈","奥羽山脈"],"紀伊山地は紀伊半島中央部に広がる山地で、大台ヶ原や大峯山がある。"],
+  ["関東地方の西側にある山地の名前は？","関東山地",["越後山脈","日光山地","八ヶ岳"],"関東山地は関東の西側・山梨寄りに広がる山地で、秩父山地とも呼ばれる。"],
+  ["九州中央部に広がる山地は？","九州山地",["筑紫山地","肥後山地","薩摩山地"],"九州山地（九州山脈）は九州中央部に広がり、熊本・宮崎・大分にまたがる。"],
+  ["長野・新潟・群馬の県境にある、日本有数の山脈は？","越後山脈",["奥羽山脈","飛騨山脈","赤石山脈"],"越後山脈は長野・新潟・群馬の県境に連なる山脈で、谷川岳などがある。"],
+  ["富士山はどの都県の境にある？","静岡県と山梨県の境",["神奈川県と静岡県の境","山梨県と長野県の境","静岡県だけにある"],"富士山は静岡県と山梨県の境にあり、どちらの県からも登ることができる。"],
+
+  ["世界最大級のカルデラを持つ、熊本県の火山は？","阿蘇山",["桜島","雲仙岳","有珠山"],"阿蘇山（熊本県）は世界最大級のカルデラ（約25km×18km）を持つ活火山。"],
+  ["鹿児島県の錦江湾にある、現在も活動中の火山は？","桜島",["阿蘇山","雲仙岳","霧島山"],"桜島（鹿児島県）は錦江湾に浮かぶ活火山。現在も頻繁に噴火しており、鹿児島市と陸続き。"],
+  ["長野・群馬の県境にある活火山で、浅間山焼けで知られる山は？","浅間山",["榛名山","妙高山","谷川岳"],"浅間山（長野・群馬）は今も活動する活火山で標高2568m。江戸時代に大噴火した記録がある。"],
+  ["岩手県にある、「南部片富士」と呼ばれる火山は？","岩手山",["八幡平","早池峰山","栗駒山"],"岩手山（岩手県）は標高2038mの活火山で「南部片富士」と呼ばれる岩手県最高峰。"],
+];
+
+
+// ── 川 ──────────────────────────────────────────────────────
+const KAWA_BANK = [
+  ["日本で一番長い川は？","信濃川（367km）",["利根川","石狩川","天竜川"],"信濃川は長野県・新潟県を流れ、日本最長の367km。長野県内では千曲川と呼ばれる。"],
+  ["日本で流域面積が最も広い川は？","利根川",["信濃川","石狩川","吉野川"],"利根川は流域面積が日本最大。「坂東太郎」の別名を持ち、関東平野を流れて太平洋に注ぐ。"],
+  ["「坂東太郎」の別名を持つ川は？","利根川",["信濃川","北上川","最上川"],"利根川の別名は坂東太郎。信濃川は信濃太郎、筑後川は筑紫次郎とも呼ばれる。"],
+  ["長野県を流れ、日本海に注ぐ日本最長の川は？","信濃川",["天竜川","富士川","黒部川"],"信濃川は長野県（千曲川）から新潟県を流れ日本海に注ぐ。日本最長の367km。"],
+  ["北海道を流れる川のうち最長のものは？","石狩川",["天塩川","十勝川","釧路川"],"石狩川は北海道最長の川。信濃川・利根川に次いで日本第3位の長さ。"],
+  ["東北地方最長の川で、太平洋に注ぐ川は？","北上川",["最上川","阿武隈川","米代川"],"北上川は岩手県から宮城県を流れ、太平洋に注ぐ東北最長の川。"],
+  ["「最上川はやく上れよ……」と松尾芭蕉が詠んだ山形県の川は？","最上川",["阿武隈川","北上川","雄物川"],"最上川は山形県を流れ日本海に注ぐ川。松尾芭蕉の俳句でも有名。"],
+  ["木曽・飛騨・長良の3川が流れ込む、愛知・岐阜・三重の川は？","木曽川",["天竜川","豊川","矢作川"],"木曽三川（木曽川・長良川・揖斐川）は愛知・岐阜・三重を流れ伊勢湾に注ぐ。"],
+  ["富士山に源を発し、太平洋に注ぐ川は？","富士川",["天竜川","大井川","安倍川"],"富士川は山梨・静岡を流れる急流の川。最上川・球磨川と並んで日本三大急流の一つ。"],
+  ["日本三大急流のうち、熊本県を流れる川は？","球磨川",["筑後川","大淀川","緑川"],"日本三大急流は富士川・最上川・球磨川。球磨川は熊本県を流れ、ラフティングでも有名。"],
+  ["関東平野を流れ、東京湾に注ぐ大きな川は？","荒川",["多摩川","相模川","鶴見川"],"荒川は埼玉県・東京都を流れ東京湾に注ぐ。隅田川は荒川から分かれた川で東京都心を流れる。"],
+  ["淀川に流れ込む、琵琶湖から出る川は？","瀬田川",["宇治川","桂川","大和川"],"琵琶湖から流れ出た水は瀬田川→宇治川→淀川と名前を変えて大阪湾に注ぐ。"],
+  ["四国最長の川で、徳島県を流れ太平洋に注ぐ川は？","吉野川",["仁淀川","四万十川","那賀川"],"吉野川は四国最長の川。「四国三郎」の別名を持つ。"],
+  ["「日本最後の清流」とも呼ばれる高知県の川は？","四万十川",["仁淀川","吉野川","物部川"],"四万十川は高知県を流れる四国第2の長さの川。清流として有名で支流に橋がない沈下橋がある。"],
+  ["九州最長の川で「筑紫次郎」の別名を持つ川は？","筑後川",["球磨川","大淀川","大分川"],"筑後川は熊本・大分・福岡・佐賀を流れる九州最長の川。別名「筑紫次郎」。"],
+];
+
+// ── 平野・盆地 ──────────────────────────────────────────────
+const HEIYA_BANK = [
+  ["日本最大の平野は？","関東平野",["濃尾平野","大阪平野","石狩平野"],"関東平野は面積約1万7000km²で日本最大の平野。利根川・荒川などが流れる。"],
+  ["愛知・岐阜・三重にまたがる大きな平野は？","濃尾平野",["関東平野","大阪平野","越後平野"],"濃尾平野は木曽三川が流れる大きな平野で、輪中（わじゅう）と呼ばれる集落がある。"],
+  ["新潟県を流れる信濃川の河口に広がる平野は？","越後平野",["関東平野","仙台平野","庄内平野"],"越後平野は信濃川下流に広がる大きな平野で、米どころとして有名。コシヒカリで知られる。"],
+  ["北海道の石狩川流域に広がる広大な平野は？","石狩平野",["十勝平野","根釧台地","上川盆地"],"石狩平野は北海道最大の平野で、道内有数の稲作地帯。"],
+  ["帯広市を中心に広がる、北海道の大農業地帯は？","十勝平野",["石狩平野","根釧台地","天塩平野"],"十勝平野は北海道東部の大平野で、じゃがいも・小麦・てんさいなどの大規模農業が盛ん。"],
+  ["甲府市を中心に山梨県にある盆地は？","甲府盆地",["松本盆地","長野盆地","伊那盆地"],"甲府盆地は山梨県中央部の盆地でぶどうの産地として有名。富士川が流れる。"],
+  ["長野県の中央に広がり、善光寺平とも呼ばれる盆地は？","長野盆地",["松本盆地","諏訪盆地","伊那盆地"],"長野盆地は長野市を中心とし、善光寺平とも呼ばれる。りんごの産地。"],
+  ["奈良県にある古都を含む盆地は？","奈良盆地",["京都盆地","大和盆地","近江盆地"],"奈良盆地（大和盆地）は奈良市・大和高田市などを含む盆地。古代の都が置かれた。"],
+  ["京都市を中心とする盆地は？","京都盆地",["奈良盆地","大阪平野","琵琶湖盆地"],"京都盆地（山城盆地）は三方を山に囲まれた盆地。夏の暑さ・冬の寒さが厳しい。"],
+  ["東北地方にある、仙台市を中心とした平野は？","仙台平野",["山形盆地","庄内平野","北上平野"],"仙台平野は宮城県を中心とした平野で、東北最大の穀倉地帯。"],
+  ["山形県の日本海側に広がる、庄内米で有名な平野は？","庄内平野",["仙台平野","秋田平野","津軽平野"],"庄内平野は山形県を流れる最上川流域に広がる大きな平野。庄内米として有名。"],
+  ["大阪府を中心に広がり、大和川・淀川が流れる平野は？","大阪平野",["奈良盆地","京都盆地","播磨平野"],"大阪平野（大阪低地）は大阪市を中心とした平野で、淀川・大和川が流れる。"],
+];
+
+
+// ── 湖 ──────────────────────────────────────────────────────
+const MIZU_BANK = [
+  ["日本で最も面積が大きい湖は？","琵琶湖",["霞ヶ浦","サロマ湖","猪苗代湖"],"琵琶湖（滋賀県）は面積約670km²で日本最大の湖。淀川の水源となっている。"],
+  ["琵琶湖は何県にある？","滋賀県",["京都府","奈良県","三重県"],"琵琶湖は滋賀県にあり、近畿地方の水がめとして重要。淀川を通じて大阪湾へ注ぐ。"],
+  ["日本で2番目に面積が大きい湖で、茨城県にあるのは？","霞ヶ浦",["諏訪湖","浜名湖","猪苗代湖"],"霞ヶ浦（茨城県）は面積約168km²で琵琶湖に次ぐ日本第2位の淡水湖。"],
+  ["北海道にある日本第3位の面積を持つ汽水湖は？","サロマ湖",["洞爺湖","支笏湖","摩周湖"],"サロマ湖（北海道）は面積約150km²で日本第3位。海水と淡水が混ざる汽水湖。"],
+  ["福島県にある、日本第4位の面積を持つ湖は？","猪苗代湖",["十和田湖","田沢湖","浜名湖"],"猪苗代湖（福島県）は面積約103km²で日本第4位。磐梯山のそばにある。"],
+  ["日本で最も深い湖で、秋田県にあるのは？","田沢湖",["摩周湖","支笏湖","十和田湖"],"田沢湖（秋田県）は最大水深423mで日本最深の湖。その透明度も高い。"],
+  ["北海道にある、世界屈指の透明度を誇る湖は？","摩周湖",["支笏湖","洞爺湖","屈斜路湖"],"摩周湖（北海道）は「霧の摩周湖」と呼ばれ、世界屈指の透明度を誇る。"],
+  ["静岡県にある、うなぎの養殖で有名な汽水湖は？","浜名湖",["諏訪湖","浜名湖","猪苗代湖"],"浜名湖（静岡県）は海とつながる汽水湖で、うなぎの養殖が盛ん。"],
+  ["長野県にある、日本有数の高地にある湖は？","諏訪湖",["浜名湖","野尻湖","木崎湖"],"諏訪湖（長野県）は標高約759mにあり、冬に全面結氷することがある。天竜川の源。"],
+  ["青森県と秋田県にまたがる、カルデラ湖は？","十和田湖",["田沢湖","猪苗代湖","小川原湖"],"十和田湖は青森・秋田の県境にあるカルデラ湖。奥入瀬川が流れ出る。"],
+  ["北海道の洞爺湖にある、温泉地で有名な場所は？","洞爺湖温泉",["登別温泉","定山渓温泉","阿寒湖温泉"],"洞爺湖（北海道）は支笏洞爺国立公園内にあるカルデラ湖。有珠山のそばにある。"],
+  ["島根県にある、宍道湖から流れ出る川は？","大橋川",["斐伊川","神戸川","江の川"],"宍道湖（島根県）はシジミ漁で有名な汽水湖。宍道湖→大橋川→中海とつながる。"],
+];
+
+// ── 半島 ────────────────────────────────────────────────────
+const HANTO_BANK = [
+  ["「まさかりの形」に例えられる、青森県の半島は？","下北半島",["津軽半島","男鹿半島","能登半島"],"下北半島（青森県）はまさかりの形に例えられる。本州最北端の大間崎がある。"],
+  ["津軽海峡をはさんで北海道と向き合う、青森県西側の半島は？","津軽半島",["下北半島","男鹿半島","牡鹿半島"],"津軽半島（青森県）は津軽海峡に突き出た半島。本州最北の地・竜飛岬がある。"],
+  ["石川県に突き出た、温泉や伝統工芸で有名な半島は？","能登半島",["三浦半島","伊豆半島","志摩半島"],"能登半島（石川県）は日本海に突き出た半島。輪島塗や能登の里山・里海が有名。"],
+  ["千葉県の大部分を占める半島は？","房総半島",["三浦半島","伊豆半島","渥美半島"],"房総半島（千葉県）は関東平野の南に突き出た半島。南端は野島崎。"],
+  ["神奈川県の南側に突き出た、横須賀がある半島は？","三浦半島",["伊豆半島","房総半島","知多半島"],"三浦半島（神奈川県）は相模湾と東京湾に挟まれた半島。南端は城ヶ島。"],
+  ["静岡県の南側に突き出た、温暖な気候の半島は？","伊豆半島",["渥美半島","志摩半島","三浦半島"],"伊豆半島（静岡県）は箱根の南に突き出た半島。熱海・伊東などの温泉が有名。"],
+  ["愛知県の東側に突き出た、電照菊の栽培が盛んな半島は？","渥美半島",["知多半島","伊豆半島","志摩半島"],"渥美半島（愛知県）は三河湾と遠州灘に挟まれた半島。電照菊・メロン・キャベツの産地。"],
+  ["三重県にある、真珠の養殖で有名な半島は？","志摩半島",["紀伊半島","渥美半島","知多半島"],"志摩半島（三重県）はリアス海岸が発達し、真珠の養殖で世界的に有名。伊勢神宮がある。"],
+  ["三重・奈良・和歌山の3県にまたがる、日本最大の半島は？","紀伊半島",["志摩半島","伊豆半島","渥美半島"],"紀伊半島は日本最大の半島。中央部に紀伊山地が広がり、熊野古道が世界遺産に登録。"],
+  ["長崎県にある、雲仙岳がある半島は？","島原半島",["薩摩半島","大隅半島","長崎半島"],"島原半島（長崎県）は雲仙岳（普賢岳）がある火山半島。1991年に大噴火が起きた。"],
+  ["鹿児島県の西側の半島で、指宿温泉がある半島は？","薩摩半島",["大隅半島","島原半島","長崎半島"],"薩摩半島（鹿児島県）は鹿児島湾の西側の半島。南端に開聞岳（薩摩富士）がある。"],
+  ["秋田県の西側に突き出た、なまはげで有名な半島は？","男鹿半島",["津軽半島","下北半島","牡鹿半島"],"男鹿半島（秋田県）は日本海に突き出た半島。なまはげの行事が世界無形文化遺産。"],
+];
+</script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const STORAGE_KEY = "chiri_best_streak";
+const QUIZ_KEY = "rv_chiri";
+const Q_OPTIONS = [5, 10, 15, 20];
+const BTN = "linear-gradient(135deg,#f97316,#ea580c)";
+
+const BANKS = {
+  ichi:  { bank: ICHI_BANK,  color:"#1d4ed8", title:"日本の位置・時差" },
+  shima: { bank: SHIMA_BANK, color:"#0891b2", title:"島・領土" },
+  yama:  { bank: YAMA_BANK,  color:"#7c3aed", title:"山地・山脈・山" },
+  kawa:  { bank: KAWA_BANK,  color:"#059669", title:"川" },
+  heiya: { bank: HEIYA_BANK, color:"#b45309", title:"平野・盆地" },
+  mizu:  { bank: MIZU_BANK,  color:"#0e7490", title:"湖" },
+  hanto: { bank: HANTO_BANK, color:"#9f1239", title:"半島" },
+};
+
+function pickProblems(diff, total) {
+  let pool = [];
+  const targets = diff === "mix" ? Object.values(BANKS) : [BANKS[diff]];
+  targets.forEach(({ bank, color, title }) => {
+    bank.forEach(([q, ans, wrongs, exp]) => {
+      const opts = shuffle([ans, ...wrongs.slice(0, 3)]);
+      pool.push({
+        color, title, question: q,
+        options: opts, answer: opts.indexOf(ans),
+        explanation: `【正解】${ans}\n${exp}`,
+      });
+    });
+  });
+  const shuffled = shuffle(pool);
+  const result = [];
+  const used = new Set();
+  while (result.length < total) {
+    const idx = Math.floor(Math.random() * shuffled.length);
+    if (!used.has(idx) || shuffled.length < total) {
+      used.add(idx);
+      result.push({...shuffled[idx]});
+    }
+  }
+  return result;
+}
+
+function SelectAnswer({ problem, checked, userAnswer, onAnswer }) {
+  return (
+    <div className="select-grid">
+      {problem.options.map((opt, i) => {
+        let cls = "select-btn";
+        if (checked) {
+          if (i === problem.answer) cls += " show-correct";
+          else if (i === userAnswer) cls += " wrong";
+        }
+        return (
+          <button key={i} className={cls} onClick={() => !checked && onAnswer(i)}>
+            <span style={{color:"#6b7280",marginRight:"8px",fontWeight:"normal"}}>{"①②③④"[i]}</span>
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function App() {
+  const [mode,setMode]         = useState("setup");
+  const [reviewBank,setReviewBank] = useState([]);
+  const [diff,setDiff]         = useState("mix");
+  const [totalQ,setTotalQ]     = useState(10);
+  const [problems,setProblems] = useState([]);
+  const [current,setCurrent]   = useState(0);
+  const [score,setScore]       = useState(0);
+  const [streak,setStreak]     = useState(0);
+  const [best,setBest]         = useState(0);
+  const [checked,setChecked]   = useState(false);
+  const [userAnswer,setUserAnswer] = useState(null);
+  const [celeb,setCeleb]       = useState(false);
+  const [isCorrect,setIsCorrect] = useState(false);
+
+  useEffect(() => {
+    try { const s=localStorage.getItem(STORAGE_KEY); if(s) setBest(parseInt(s)||0); } catch(_) {}
+    setReviewBank(JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]'));
+  }, []);
+  const saveBest = v => { try { localStorage.setItem(STORAGE_KEY,String(v)); } catch(_) {} };
+
+  const startReview = () => {
+    const bank = JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+    setReviewBank(bank);
+    if (bank.length === 0) { setMode("setup"); return; }
+    const reshuffled = bank.map(p => {
+      const correctOpt = p.options[p.answer];
+      const opts = shuffle([...p.options]);
+      return {...p, options:opts, answer:opts.indexOf(correctOpt)};
+    });
+    setProblems(reshuffled);
+    setCurrent(0); setScore(0); setStreak(0);
+    setChecked(false); setUserAnswer(null); setCeleb(false);
+    setMode("review");
+  };
+
+  const startQuiz = () => {
+    setProblems(pickProblems(diff, totalQ));
+    setCurrent(0); setScore(0); setStreak(0);
+    setChecked(false); setUserAnswer(null); setCeleb(false);
+    setMode("quiz");
+  };
+
+  const problem = problems[current] || null;
+
+  const handleAnswer = ans => {
+    if (checked) return;
+    setUserAnswer(ans); setChecked(true);
+    const ok = ans === problem.answer;
+    setIsCorrect(ok);
+    if (ok) {
+      setScore(s=>s+1); const ns=streak+1; setStreak(ns);
+      if(ns>best){setBest(ns);saveBest(ns);}
+      setCeleb(true); setTimeout(()=>setCeleb(false),1800);
+      try{
+        const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+        const id=problem.title+'|'+problem.question;
+        const i=b.findIndex(x=>x._id===id);
+        if(i>=0){b[i].ok=(b[i].ok||0)+1;if(b[i].ok>=5)b.splice(i,1);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}
+        setReviewBank([...b]);
+      }catch(_){}
+    } else {
+      setStreak(0);
+      try{
+        const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+        const id=problem.title+'|'+problem.question;
+        if(!b.find(x=>x._id===id)){const s={...problem,_id:id,ok:0};b.push(s);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}
+        setReviewBank([...b]);
+      }catch(_){}
+    }
+  };
+
+  const nextQuestion = () => {
+    const _end = current+1 >= problems.length;
+    if (_end && mode==="review") {
+      const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+      setReviewBank([...b]);
+      if(b.length>0){startReview();}else{setMode("graduated");}
+      return;
+    }
+    if (_end) { setMode("result"); return; }
+    setCurrent(c=>c+1);
+    setChecked(false); setUserAnswer(null); setCeleb(false);
+  };
+
+  const progress = problem ? (current/problems.length)*100 : 0;
+
+  const DIFF_OPTIONS = [
+    {key:"mix",   emoji:"🗾", name:"ミックス（全分野）",  desc:"全5分野からランダム出題"},
+    {key:"ichi",  emoji:"🌐", name:"日本の位置・時差",    desc:"緯度・経度・標準時子午線・周辺の国など"},
+    {key:"shima", emoji:"🏝️", name:"島・領土",            desc:"北方領土・竹島・端の島など"},
+    {key:"yama",  emoji:"🏔️", name:"山地・山脈・山",      desc:"日本アルプス・奥羽山脈・富士山など"},
+    {key:"kawa",  emoji:"🌊", name:"川",                  desc:"信濃川・利根川・三大急流など"},
+    {key:"heiya", emoji:"🏞️", name:"平野・盆地",          desc:"関東平野・甲府盆地・越後平野など"},
+    {key:"mizu",  emoji:"🏞", name:"湖",                  desc:"琵琶湖・霞ヶ浦・田沢湖・摩周湖など"},
+    {key:"hanto", emoji:"🗺️", name:"半島",                desc:"紀伊半島・能登半島・下北半島など"},
+  ];
+
+  if (mode === "graduated") return (
+    <div className="setup-wrap" style={{background:"#fff7ed"}}>
+      <div className="setup-card">
+        <div className="setup-emoji">{"🎓"}</div>
+        <h2 className="setup-title" style={{color:"#7c2d12"}}>{"復習バンク卒業！"}</h2>
+        <p style={{fontSize:"14px",color:"#ea580c",marginBottom:"16px",fontWeight:"bold"}}>{"すべての問題を5回正解しました！"}</p>
+        <div style={{background:"#ffedd5",borderRadius:"14px",padding:"16px",marginBottom:"16px",fontSize:"13px",color:"#7c2d12",lineHeight:"1.8"}}>{"🌟 地理マスター！"}</div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #c2410c"}} onClick={()=>setMode("setup")}>{"もどる"}</button>
+      </div>
+    </div>
+  );
+
+  if (mode === "setup") return (
+    <div className="setup-wrap" style={{background:"#fff7ed"}}>
+      <div className="setup-card">
+        <div style={{textAlign:"center",marginBottom:"12px",fontSize:"12px"}}>
+          <a href="https://shoi141.github.io/shakai-quiz/" style={{color:"#adb5bd",textDecoration:"none"}}>← 社会トップ</a>
+          {"　|　"}
+          <a href="https://shoi141.github.io/quiz-portal/" style={{color:"#adb5bd",textDecoration:"none"}}>🏠 教科トップ</a>
+        </div>
+        <div className="setup-emoji">🗾</div>
+        <h1 className="setup-title" style={{color:"#7c2d12"}}>日本の地理クイズ</h1>
+        <p className="setup-sub">位置・島・山・川・平野を覚えよう！</p>
+        <div style={{marginBottom:"16px"}}>
+          <button onClick={()=>{if(reviewBank.length>0)startReview();}}
+            style={{width:"100%",padding:"14px 16px",borderRadius:"14px",
+              cursor:reviewBank.length>0?"pointer":"default",
+              border:reviewBank.length>0?"2px solid #ef4444":"2px solid #e5e7eb",
+              background:reviewBank.length>0?"#fef2f2":"#f9fafb",
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+              fontFamily:"inherit",opacity:reviewBank.length===0?0.45:1}}>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontWeight:"900",fontSize:"15px",color:reviewBank.length>0?"#b91c1c":"#374151"}}>{"📚 復習モード"}</div>
+              {reviewBank.length>0&&<div style={{fontSize:"11px",color:"#ef4444",marginTop:"2px"}}>{"タップして今すぐ開始！"}</div>}
+            </div>
+            <span style={{background:reviewBank.length>0?"#ef4444":"#d1d5db",color:"#fff",borderRadius:"99px",padding:"4px 12px",fontSize:"13px",fontWeight:"bold"}}>
+              {reviewBank.length>0?reviewBank.length+"問":"なし"}
+            </span>
+          </button>
+          {reviewBank.length===0&&<div style={{fontSize:"11px",color:"#9ca3af",textAlign:"center",marginTop:"4px"}}>{"間違えた問題が溜まるとここで復習できます"}</div>}
+        </div>
+        {best>0&&<div className="best-badge" style={{background:"#ffedd5",border:"1.5px solid #fb923c",color:"#7c2d12"}}>🏆 最高連続記録：<strong>{best}問</strong></div>}
+        <div className="qcount-section">分野を選ぶ</div>
+        <div className="diff-btn-row">
+          {DIFF_OPTIONS.map(d=>(
+            <button key={d.key} className="diff-card-btn"
+              style={{background:diff===d.key?"#ffedd5":"#f9fafb",
+                      border:diff===d.key?"2px solid #f97316":"2px solid #e5e7eb",
+                      boxShadow:diff===d.key?"0 3px 0 #f97316":"none"}}
+              onClick={()=>setDiff(d.key)}>
+              <span style={{fontSize:"22px"}}>{d.emoji}</span>
+              <div>
+                <div className="diff-name" style={{color:diff===d.key?"#7c2d12":"#1f2937"}}>{d.name}</div>
+                <div className="diff-desc">{d.desc}</div>
+              </div>
+              {diff===d.key&&<span style={{marginLeft:"auto",fontSize:"18px"}}>✅</span>}
+            </button>
+          ))}
+        </div>
+        <div className="qcount-section">何問やる？</div>
+        <div className="qcount-grid">
+          {Q_OPTIONS.map(n=>(
+            <button key={n} className="qcount-btn"
+              style={{border:totalQ===n?"2px solid #f97316":"2px solid #dee2e6",
+                      background:totalQ===n?"#f97316":"#f8f9fa",
+                      color:totalQ===n?"#fff":"#495057",
+                      boxShadow:totalQ===n?"0 3px 0 #ea580c":"none"}}
+              onClick={()=>setTotalQ(n)}>{n}問</button>
+          ))}
+        </div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #c2410c"}} onClick={startQuiz}>スタート！ 🚀</button>
+      </div>
+    </div>
+  );
+
+  if (mode === "result") {
+    const pct = Math.round((score/problems.length)*100);
+    return (
+      <div className="setup-wrap" style={{background:"#fff7ed"}}>
+        <div className="setup-card">
+          <div className="setup-emoji">{pct===100?"🏆":pct>=70?"🎉":"💪"}</div>
+          <h2 className="setup-title" style={{color:"#7c2d12"}}>おわり！</h2>
+          <p className="result-score">{problems.length}問中 <span className="result-big" style={{color:"#f97316"}}>{score}</span> 問正解</p>
+          <div className="pct-bar-bg" style={{background:"#ffedd5"}}><div className="pct-bar-fill" style={{background:BTN,width:`${pct}%`}}/></div>
+          <p className="pct-text">{pct}%</p>
+          <div className="streak-result-row">
+            <div className="streak-result-box"><div className="streak-result-label">この回の最高連続</div><div className="streak-result-val" style={{color:"#ef4444"}}>🔥 {streak}問</div></div>
+            <div className="streak-result-box"><div className="streak-result-label">歴代最高連続</div><div className="streak-result-val" style={{color:"#f59f00"}}>🏆 {best}問</div></div>
+          </div>
+          <div style={{display:"flex",gap:"8px",marginTop:"16px"}}>
+            <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #c2410c"}} onClick={startQuiz}>もう一度</button>
+            <button className="start-btn" style={{background:"#868e96",color:"#fff",boxShadow:"0 4px 0 #495057"}} onClick={()=>setMode("setup")}>設定へ</button>
+          </div>
+          {reviewBank.length>0&&(
+            <button className="start-btn"
+              style={{background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",boxShadow:"0 4px 0 #991b1b",marginTop:"8px",width:"100%"}}
+              onClick={startReview}>{"続けて復習する 📚 ("}{reviewBank.length}{"問)"}</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!problem) return null;
+
+  return (
+    <div className="rika-root">
+      {celeb&&(
+        <div className="celeb-overlay">
+          <div className="celeb-box">
+            <div className="celeb-emoji">🎉</div>
+            <div className="celeb-text" style={{color:"#7c2d12"}}>せいかい！</div>
+            <div className="celeb-stars">{randomStars(5)}</div>
+            {streak>=3&&<div className="celeb-streak" style={{background:"#f97316"}}>🔥 {streak}れんぞく！</div>}
+            {streak===best&&streak>1&&<div className="celeb-streak" style={{background:"#f59f00",marginTop:"6px"}}>🏆 新記録！</div>}
+          </div>
+        </div>
+      )}
+      <div className="quiz-header">
+        <button className="back-btn" onClick={()=>setMode("setup")}>← もどる</button>
+        <span className="q-label">Q{current+1}<span className="q-total">/{problems.length}</span></span>
+        <span className="streak-badge">🔥{streak}</span>
+      </div>
+      <div className="progress-bar-bg">
+        <div className="progress-fill" style={{background:problem.color,width:`${progress}%`}}/>
+      </div>
+      <div className="problem-card" style={{borderTop:`5px solid ${problem.color}`}}>
+        <div style={{fontWeight:"900",fontSize:"12px",color:problem.color,marginBottom:"8px"}}>{problem.title}</div>
+        <div style={{fontSize:"16px",fontWeight:"bold",lineHeight:"1.8",marginBottom:"14px"}}>{problem.question}</div>
+        <SelectAnswer problem={problem} checked={checked} userAnswer={userAnswer} onAnswer={handleAnswer}/>
+      </div>
+      {checked&&(
+        <>
+          <div style={{textAlign:"center",fontSize:"18px",fontWeight:"900",color:isCorrect?"#10b981":"#ef4444"}}>
+            {isCorrect?"⭕ 正解！":"❌ 不正解"}
+          </div>
+          <div className="explanation-card">
+            <div style={{fontWeight:"900",marginBottom:"4px",fontSize:"12px",color:"#92400e"}}>💡 解説</div>
+            {problem.explanation.split("\n").map((line,i)=><div key={i}>{line}</div>)}
+          </div>
+          <button className="next-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #c2410c"}} onClick={nextQuestion}>
+            {current+1>=problems.length?"結果を見る 🎉":"つぎへ →"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
