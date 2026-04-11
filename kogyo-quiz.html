@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>工業地帯・地域クイズ</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+body{background:#fff7ed;}
+.rika-root{min-height:100vh;background:#fff7ed;padding:12px;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+.select-grid{display:flex;flex-direction:column;gap:8px;}
+.select-btn{width:100%;padding:13px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;cursor:pointer;font-size:14px;font-weight:bold;text-align:left;font-family:inherit;}
+.select-btn.show-correct{background:#d1fae5;border-color:#10b981;color:#065f46;}
+.select-btn.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b;opacity:0.7;}
+.explanation-card{background:#fef3c7;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f;line-height:1.9;}
+.diff-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.diff-card-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;cursor:pointer;text-align:left;border:2px solid transparent;font-family:inherit;background:#f9fafb;}
+.diff-card-btn .diff-name{font-weight:900;font-size:15px;}
+.diff-card-btn .diff-desc{font-size:11px;color:#6b7280;margin-top:2px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randomStars(n){return Array.from({length:n},()=>["⭐","🌟","✨"][randInt(0,2)]).join(" ");}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const KOGYO_BANK = [
+  ["東京・横浜を中心とする日本最大の工業地帯は？","京浜工業地帯",["中京工業地帯","阪神工業地帯","北関東工業地域"],"京浜工業地帯は東京湾岸に広がる。機械・印刷・食品工業が中心。出荷額は阪神・中京と並ぶ。"],
+  ["名古屋を中心に、自動車産業で有名な工業地帯は？","中京工業地帯",["京浜工業地帯","阪神工業地帯","京葉工業地域"],"中京工業地帯は愛知・三重・岐阜に広がる。トヨタ自動車など自動車産業が中心で工業出荷額が最大。"],
+  ["大阪・神戸を中心とする工業地帯は？","阪神工業地帯",["京浜工業地帯","中京工業地帯","瀬戸内工業地域"],"阪神工業地帯は大阪湾岸に広がる。金属・機械・化学工業が中心。"],
+  ["福岡県北部を中心に、かつて鉄鋼業で栄えた工業地帯は？","北九州工業地帯（地域）",["阪神工業地帯","中京工業地帯","京浜工業地帯"],"北九州工業地帯（地域）は筑豊炭田の石炭と中国からの鉄鉱石を利用して鉄鋼業で発展。現在は地域に格下げ。"],
+  ["茨城・栃木・群馬・埼玉に広がる内陸型の工業地域は？","北関東工業地域",["京葉工業地域","東海工業地域","関東内陸工業地域"],"北関東工業地域は高速道路網を活かした内陸型工業地域。自動車・電機などが中心。"],
+  ["千葉県の東京湾岸に広がる石油化学工業が盛んな地域は？","京葉工業地域",["北関東工業地域","鹿島臨海工業地域","東海工業地域"],"京葉工業地域は千葉市・市原市などを中心とした工業地域。製鉄・石油化学が中心。"],
+  ["広島・岡山・山口などの瀬戸内海沿岸に広がる工業地域は？","瀬戸内工業地域",["阪神工業地帯","北九州工業地帯","東海工業地域"],"瀬戸内工業地域は瀬戸内海沿岸に広がる。自動車（広島のマツダ）・造船・石油化学が中心。"],
+  ["静岡県の浜松・磐田を中心に、輸送機械（バイク・自動車）が盛んな地域は？","東海工業地域",["中京工業地帯","阪神工業地帯","瀬戸内工業地域"],"東海工業地域は静岡県の太平洋沿岸。ヤマハ・スズキ・ホンダなど輸送機械・楽器が盛ん。"],
+  ["日本の工業地帯・地域が太平洋側に集中している地域を何という？","太平洋ベルト",["工業ベルト地帯","臨海工業地帯","太平洋岸工業地域"],"太平洋ベルトは関東〜九州北部の太平洋沿岸に工業地帯・地域が集中する地域。"],
+  ["近年、内陸部に工場が増えている理由は？","高速道路が整備され輸送が便利になったから",["土地代が安いから","労働力が豊富だから","外国からの輸入品が入りやすいから"],"高速道路の発達で内陸の工業団地への輸送が効率化。北関東・東北・九州などで内陸型工業が発展。"],
+];
+</script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const STORAGE_KEY = "kogyo_best";
+const QUIZ_KEY = "rv_kogyo";
+const Q_OPTIONS = [5, 10, 15, 20];
+const BTN = "linear-gradient(135deg,#f97316,#7c2d12)";
+const BANKS={mix:{bank:KOGYO_BANK,color:"#f97316",title:"工業地帯・地域"}};
+function pickProblems(diff, total) {
+  let pool = [];
+  const targets = diff === "mix" ? Object.values(BANKS) : [BANKS[diff]];
+  targets.forEach(({ bank, color, title }) => {
+    bank.forEach(([q, ans, wrongs, exp]) => {
+      const opts = shuffle([ans, ...wrongs.slice(0,3)]);
+      pool.push({ color, title, question:q, options:opts, answer:opts.indexOf(ans),
+        explanation:`【正解】${ans}
+${exp}` });
+    });
+  });
+  const shuffled = shuffle(pool);
+  const result=[]; const used=new Set();
+  while(result.length<total){
+    const idx=Math.floor(Math.random()*shuffled.length);
+    if(!used.has(idx)||shuffled.length<total){used.add(idx);result.push({...shuffled[idx]});}
+  }
+  return result;
+}
+function SelectAnswer({problem,checked,userAnswer,onAnswer}){
+  return(<div className="select-grid">{problem.options.map((opt,i)=>{
+    let cls="select-btn";
+    if(checked){if(i===problem.answer)cls+=" show-correct";else if(i===userAnswer)cls+=" wrong";}
+    return(<button key={i} className={cls} onClick={()=>!checked&&onAnswer(i)}>
+      <span style={{color:"#6b7280",marginRight:"8px",fontWeight:"normal"}}>{"①②③④"[i]}</span>{opt}
+    </button>);
+  })}</div>);
+}
+function App(){
+  const [mode,setMode]=useState("setup");
+  const [reviewBank,setReviewBank]=useState([]);
+  const [diff,setDiff]=useState("mix");
+  const [totalQ,setTotalQ]=useState(10);
+  const [problems,setProblems]=useState([]);
+  const [current,setCurrent]=useState(0);
+  const [score,setScore]=useState(0);
+  const [streak,setStreak]=useState(0);
+  const [best,setBest]=useState(0);
+  const [checked,setChecked]=useState(false);
+  const [userAnswer,setUserAnswer]=useState(null);
+  const [celeb,setCeleb]=useState(false);
+  const [isCorrect,setIsCorrect]=useState(false);
+  useEffect(()=>{
+    try{const s=localStorage.getItem("kogyo_best");if(s)setBest(parseInt(s)||0);}catch(_){}
+    setReviewBank(JSON.parse(localStorage.getItem("rv_kogyo")||'[]'));
+  },[]);
+  const saveBest=v=>{try{localStorage.setItem("kogyo_best",String(v));}catch(_){}};
+  const startReview=()=>{
+    const bank=JSON.parse(localStorage.getItem("rv_kogyo")||'[]');
+    setReviewBank(bank);
+    if(bank.length===0){setMode("setup");return;}
+    const r=bank.map(p=>{const c=p.options[p.answer];const opts=shuffle([...p.options]);return{...p,options:opts,answer:opts.indexOf(c)};});
+    setProblems(r);setCurrent(0);setScore(0);setStreak(0);setChecked(false);setUserAnswer(null);setCeleb(false);setMode("review");
+  };
+  const startQuiz=()=>{
+    setProblems(pickProblems(diff,totalQ));setCurrent(0);setScore(0);setStreak(0);
+    setChecked(false);setUserAnswer(null);setCeleb(false);setMode("quiz");
+  };
+  const problem=problems[current]||null;
+  const handleAnswer=ans=>{
+    if(checked)return;
+    setUserAnswer(ans);setChecked(true);
+    const ok=ans===problem.answer;setIsCorrect(ok);
+    if(ok){
+      setScore(s=>s+1);const ns=streak+1;setStreak(ns);
+      if(ns>best){setBest(ns);saveBest(ns);}
+      setCeleb(true);setTimeout(()=>setCeleb(false),1800);
+      try{const b=JSON.parse(localStorage.getItem("rv_kogyo")||'[]');const id=problem.title+'|'+problem.question;const i=b.findIndex(x=>x._id===id);if(i>=0){b[i].ok=(b[i].ok||0)+1;if(b[i].ok>=5)b.splice(i,1);localStorage.setItem("rv_kogyo",JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
+    }else{
+      setStreak(0);
+      try{const b=JSON.parse(localStorage.getItem("rv_kogyo")||'[]');const id=problem.title+'|'+problem.question;if(!b.find(x=>x._id===id)){const s={...problem,_id:id,ok:0};b.push(s);localStorage.setItem("rv_kogyo",JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
+    }
+  };
+  const nextQuestion=()=>{
+    const _end=current+1>=problems.length;
+    if(_end&&mode==="review"){const b=JSON.parse(localStorage.getItem("rv_kogyo")||'[]');setReviewBank([...b]);if(b.length>0){startReview();}else{setMode("graduated");}return;}
+    if(_end){setMode("result");return;}
+    setCurrent(c=>c+1);setChecked(false);setUserAnswer(null);setCeleb(false);
+  };
+  const progress=problem?(current/problems.length)*100:0;
+  const DIFF_OPTIONS=[{key:"mix",emoji:"🏭",name:"全問ミックス",desc:"京浜・中京・阪神・北九州など"}];
+  if(mode==="graduated")return(<div className="setup-wrap" style={{background:"#fff7ed"}}><div className="setup-card"><div className="setup-emoji">🎓</div><h2 className="setup-title" style={{color:"#7c2d12"}}> 復習バンク卒業！</h2><div style={{background:"#ffedd5",borderRadius:"14px",padding:"16px",marginBottom:"16px",fontSize:"13px",color:"#7c2d12",lineHeight:"1.8"}}>🌟 マスター達成！</div><button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #7c2d12"}} onClick={()=>setMode("setup")}>もどる</button></div></div>);
+  if(mode==="setup")return(
+    <div className="setup-wrap" style={{background:"#fff7ed"}}>
+      <div className="setup-card">
+        <div style={{textAlign:"center",marginBottom:"12px",fontSize:"12px"}}>
+          <a href="https://shoi141.github.io/shakai-quiz/" style={{color:"#adb5bd",textDecoration:"none"}}>← 社会トップ</a>
+          {"　|　"}
+          <a href="https://shoi141.github.io/quiz-portal/" style={{color:"#adb5bd",textDecoration:"none"}}>🏠 教科トップ</a>
+        </div>
+        <div className="setup-emoji">🏭</div>
+        <h1 className="setup-title" style={{color:"#7c2d12"}}>工業地帯・地域クイズ</h1>
+        <p className="setup-sub">日本の工業地帯・地域を覚えよう！</p>
+        <div style={{marginBottom:"16px"}}>
+          <button onClick={()=>{if(reviewBank.length>0)startReview();}} style={{width:"100%",padding:"14px 16px",borderRadius:"14px",cursor:reviewBank.length>0?"pointer":"default",border:reviewBank.length>0?"2px solid #ef4444":"2px solid #e5e7eb",background:reviewBank.length>0?"#fef2f2":"#f9fafb",display:"flex",alignItems:"center",justifyContent:"space-between",fontFamily:"inherit",opacity:reviewBank.length===0?0.45:1}}>
+            <div style={{textAlign:"left"}}><div style={{fontWeight:"900",fontSize:"15px",color:reviewBank.length>0?"#b91c1c":"#374151"}}>📚 復習モード</div>{reviewBank.length>0&&<div style={{fontSize:"11px",color:"#ef4444",marginTop:"2px"}}>タップして今すぐ開始！</div>}</div>
+            <span style={{background:reviewBank.length>0?"#ef4444":"#d1d5db",color:"#fff",borderRadius:"99px",padding:"4px 12px",fontSize:"13px",fontWeight:"bold"}}>{reviewBank.length>0?reviewBank.length+"問":"なし"}</span>
+          </button>
+          {reviewBank.length===0&&<div style={{fontSize:"11px",color:"#9ca3af",textAlign:"center",marginTop:"4px"}}>間違えた問題が溜まるとここで復習できます</div>}
+        </div>
+        {best>0&&<div className="best-badge" style={{background:"#ffedd5",border:"1.5px solid #f97316",color:"#7c2d12"}}>🏆 最高連続記録：<strong>{best}問</strong></div>}
+        <div className="qcount-section">分野を選ぶ</div>
+        <div className="diff-btn-row">
+          {DIFF_OPTIONS.map(d=>(
+            <button key={d.key} className="diff-card-btn" style={{background:diff===d.key?"#ffedd5":"#f9fafb",border:diff===d.key?"2px solid #f97316":"2px solid #e5e7eb",boxShadow:diff===d.key?"0 3px 0 #f97316":"none"}} onClick={()=>setDiff(d.key)}>
+              <span style={{fontSize:"22px"}}>{d.emoji}</span>
+              <div><div className="diff-name" style={{color:diff===d.key?"#7c2d12":"#1f2937"}}>{d.name}</div><div className="diff-desc">{d.desc}</div></div>
+              {diff===d.key&&<span style={{marginLeft:"auto",fontSize:"18px"}}>✅</span>}
+            </button>
+          ))}
+        </div>
+        <div className="qcount-section">何問やる？</div>
+        <div className="qcount-grid">
+          {Q_OPTIONS.map(n=>(<button key={n} className="qcount-btn" style={{border:totalQ===n?"2px solid #f97316":"2px solid #dee2e6",background:totalQ===n?"#f97316":"#f8f9fa",color:totalQ===n?"#fff":"#495057",boxShadow:totalQ===n?"0 3px 0 #7c2d12":"none"}} onClick={()=>setTotalQ(n)}>{n}問</button>))}
+        </div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #7c2d12"}} onClick={startQuiz}>スタート！ 🚀</button>
+      </div>
+    </div>
+  );
+  if(mode==="result"){
+    const pct=Math.round((score/problems.length)*100);
+    return(<div className="setup-wrap" style={{background:"#fff7ed"}}><div className="setup-card">
+      <div className="setup-emoji">{pct===100?"🏆":pct>=70?"🎉":"💪"}</div>
+      <h2 className="setup-title" style={{color:"#7c2d12"}}> おわり！</h2>
+      <p className="result-score">{problems.length}問中 <span className="result-big" style={{color:"#f97316"}}>{score}</span> 問正解</p>
+      <div className="pct-bar-bg" style={{background:"#ffedd5"}}><div className="pct-bar-fill" style={{background:BTN,width:`${pct}%`}}/></div>
+      <p className="pct-text">{pct}%</p>
+      <div className="streak-result-row">
+        <div className="streak-result-box"><div className="streak-result-label">この回の最高連続</div><div className="streak-result-val" style={{color:"#ef4444"}}>🔥 {streak}問</div></div>
+        <div className="streak-result-box"><div className="streak-result-label">歴代最高連続</div><div className="streak-result-val" style={{color:"#f59f00"}}>🏆 {best}問</div></div>
+      </div>
+      <div style={{display:"flex",gap:"8px",marginTop:"16px"}}>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #7c2d12"}} onClick={startQuiz}>もう一度</button>
+        <button className="start-btn" style={{background:"#868e96",color:"#fff",boxShadow:"0 4px 0 #495057"}} onClick={()=>setMode("setup")}>設定へ</button>
+      </div>
+      {reviewBank.length>0&&<button className="start-btn" style={{background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",boxShadow:"0 4px 0 #991b1b",marginTop:"8px",width:"100%"}} onClick={startReview}>続けて復習する 📚 ({reviewBank.length}問)</button>}
+    </div></div>);
+  }
+  if(!problem)return null;
+  return(
+    <div className="rika-root">
+      {celeb&&(<div className="celeb-overlay"><div className="celeb-box">
+        <div className="celeb-emoji">🎉</div>
+        <div className="celeb-text" style={{color:"#7c2d12"}} >せいかい！</div>
+        <div className="celeb-stars">{randomStars(5)}</div>
+        {streak>=3&&<div className="celeb-streak" style={{background:"#f97316"}} >🔥 {streak}れんぞく！</div>}
+        {streak===best&&streak>1&&<div className="celeb-streak" style={{background:"#f59f00",marginTop:"6px"}}>🏆 新記録！</div>}
+      </div></div>)}
+      <div className="quiz-header">
+        <button className="back-btn" onClick={()=>setMode("setup")}>← もどる</button>
+        <span className="q-label">Q{current+1}<span className="q-total">/{problems.length}</span></span>
+        <span className="streak-badge">🔥{streak}</span>
+      </div>
+      <div className="progress-bar-bg"><div className="progress-fill" style={{background:problem.color,width:`${progress}%`}}/></div>
+      <div className="problem-card" style={{borderTop:`5px solid ${problem.color}`}}>
+        <div style={{fontWeight:"900",fontSize:"12px",color:problem.color,marginBottom:"8px"}}>{problem.title}</div>
+        <div style={{fontSize:"16px",fontWeight:"bold",lineHeight:"1.8",marginBottom:"14px"}}>{problem.question}</div>
+        <SelectAnswer problem={problem} checked={checked} userAnswer={userAnswer} onAnswer={handleAnswer}/>
+      </div>
+      {checked&&(<>
+        <div style={{textAlign:"center",fontSize:"18px",fontWeight:"900",color:isCorrect?"#10b981":"#ef4444"}}>{isCorrect?"⭕ 正解！":"❌ 不正解"}</div>
+        <div className="explanation-card">
+          <div style={{fontWeight:"900",marginBottom:"4px",fontSize:"12px",color:"#92400e"}}>💡 解説</div>
+          {problem.explanation.split("\n").map((line,i)=><div key={i}>{line}</div>)}
+        </div>
+        <button className="next-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #7c2d12"}} onClick={nextQuestion}>{current+1>=problems.length?"結果を見る 🎉":"つぎへ →"}</button>
+      </>)}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
