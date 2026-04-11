@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>県庁所在地クイズ</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+body{background:#eff6ff;}
+.rika-root{min-height:100vh;background:#eff6ff;padding:12px;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+.select-grid{display:flex;flex-direction:column;gap:8px;}
+.select-btn{width:100%;padding:13px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;cursor:pointer;font-size:14px;font-weight:bold;text-align:left;font-family:inherit;}
+.select-btn.show-correct{background:#d1fae5;border-color:#10b981;color:#065f46;}
+.select-btn.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b;opacity:0.7;}
+.explanation-card{background:#fef3c7;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f;line-height:1.9;}
+.diff-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.diff-card-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;cursor:pointer;text-align:left;border:2px solid transparent;font-family:inherit;background:#f9fafb;}
+.diff-card-btn .diff-name{font-weight:900;font-size:15px;}
+.diff-card-btn .diff-desc{font-size:11px;color:#6b7280;margin-top:2px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randomStars(n){return Array.from({length:n},()=>["⭐","🌟","✨"][randInt(0,2)]).join(" ");}
+function shuffle(arr){const a=[...arr  ["千葉県の県庁所在地は？","千葉市",["市川市","船橋市","松戸市"],"千葉県の県庁所在地は千葉市。船橋市・松戸市より人口が多く政令指定都市。"],
+  ["東京都の都庁所在地は？","新宿区",["千代田区","港区","渋谷区"],"東京都庁は1991年に千代田区から新宿区西新宿に移転。都内最大のビルの一つ。"],
+];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ── 県庁所在地 ────────────────────────────────────────────────
+// [問題, 正解, 不正解×3, 解説]
+const KENCHO_BANK = [
+  // 県名と異なる所在地（超重要）
+  ["北海道の道庁所在地は？","札幌市",["函館市","旭川市","小樽市"],"北海道の道庁所在地は札幌市。北海道で最大の都市。"],
+  ["岩手県の県庁所在地は？","盛岡市",["一関市","奥州市","花巻市"],"岩手県の県庁所在地は盛岡市。岩手県最大の都市。"],
+  ["宮城県の県庁所在地は？","仙台市",["石巻市","気仙沼市","塩竈市"],"宮城県の県庁所在地は仙台市。東北最大の都市で「杜の都」とも呼ばれる。"],
+  ["群馬県の県庁所在地は？","前橋市",["高崎市","桐生市","太田市"],"群馬県の県庁所在地は前橋市。高崎市の方が人口が多いが、県庁は前橋市にある。"],
+  ["栃木県の県庁所在地は？","宇都宮市",["小山市","足利市","栃木市"],"栃木県の県庁所在地は宇都宮市。餃子の街として有名。"],
+  ["茨城県の県庁所在地は？","水戸市",["つくば市","日立市","土浦市"],"茨城県の県庁所在地は水戸市。水戸黄門・偕楽園で有名。"],
+  ["埼玉県の県庁所在地は？","さいたま市",["川越市","川口市","所沢市"],"埼玉県の県庁所在地はさいたま市（旧浦和市）。"],
+  ["神奈川県の県庁所在地は？","横浜市",["川崎市","相模原市","鎌倉市"],"神奈川県の県庁所在地は横浜市。日本最大の市（人口）の一つ。"],
+  ["山梨県の県庁所在地は？","甲府市",["富士吉田市","山梨市","大月市"],"山梨県の県庁所在地は甲府市。甲府盆地の中心にある。"],
+  ["愛知県の県庁所在地は？","名古屋市",["豊田市","豊橋市","岡崎市"],"愛知県の県庁所在地は名古屋市。中京工業地帯の中心。"],
+  ["石川県の県庁所在地は？","金沢市",["七尾市","小松市","輪島市"],"石川県の県庁所在地は金沢市。加賀百万石の城下町。"],
+  ["滋賀県の県庁所在地は？","大津市",["彦根市","草津市","近江八幡市"],"滋賀県の県庁所在地は大津市。琵琶湖のほとりにある。"],
+  ["兵庫県の県庁所在地は？","神戸市",["姫路市","尼崎市","西宮市"],"兵庫県の県庁所在地は神戸市。港町として有名。"],
+  ["三重県の県庁所在地は？","津市",["伊勢市","四日市市","鈴鹿市"],"三重県の県庁所在地は津市。「つ」と一文字で日本最短の市名。"],
+  ["島根県の県庁所在地は？","松江市",["出雲市","浜田市","益田市"],"島根県の県庁所在地は松江市。宍道湖のほとりにある。"],
+  ["愛媛県の県庁所在地は？","松山市",["今治市","新居浜市","宇和島市"],"愛媛県の県庁所在地は松山市。夏目漱石の「坊っちゃん」の舞台。"],
+  ["香川県の県庁所在地は？","高松市",["丸亀市","坂出市","観音寺市"],"香川県の県庁所在地は高松市。讃岐うどんと栗林公園で有名。"],
+  ["高知県の県庁所在地は？","高知市",["南国市","四万十市","土佐市"],"高知県の県庁所在地は高知市。坂本龍馬の出身地。"],
+  ["沖縄県の県庁所在地は？","那覇市",["宜野湾市","浦添市","沖縄市"],"沖縄県の県庁所在地は那覇市。首里城がある。"],
+  ["鹿児島県の県庁所在地は？","鹿児島市",["霧島市","薩摩川内市","姶良市"],"鹿児島県の県庁所在地は鹿児島市。桜島が見える。"],
+  ["宮崎県の県庁所在地は？","宮崎市",["都城市","延岡市","日南市"],"宮崎県の県庁所在地は宮崎市。日向灘に面した温暖な都市。"],
+  ["大分県の県庁所在地は？","大分市",["別府市","中津市","日田市"],"大分県の県庁所在地は大分市。温泉大国・大分の中心。"],
+  ["熊本県の県庁所在地は？","熊本市",["八代市","天草市","荒尾市"],"熊本県の県庁所在地は熊本市。熊本城と阿蘇山が有名。"],
+  ["長崎県の県庁所在地は？","長崎市",["佐世保市","諫早市","大村市"],"長崎県の県庁所在地は長崎市。出島・グラバー園など歴史的な港町。"],
+  ["佐賀県の県庁所在地は？","佐賀市",["唐津市","鳥栖市","伊万里市"],"佐賀県の県庁所在地は佐賀市。有田焼・伊万里焼の産地に近い。"],
+  ["福岡県の県庁所在地は？","福岡市",["北九州市","久留米市","飯塚市"],"福岡県の県庁所在地は福岡市。九州最大の都市。"],
+  ["山口県の県庁所在地は？","山口市",["下関市","宇部市","周南市"],"山口県の県庁所在地は山口市。下関市の方が人口が多いが、県庁は山口市にある。"],
+  ["広島県の県庁所在地は？","広島市",["福山市","呉市","尾道市"],"広島県の県庁所在地は広島市。原爆ドームと平和記念公園がある。"],
+  ["岡山県の県庁所在地は？","岡山市",["倉敷市","津山市","総社市"],"岡山県の県庁所在地は岡山市。桃太郎伝説と後楽園で有名。"],
+  ["鳥取県の県庁所在地は？","鳥取市",["米子市","倉吉市","境港市"],"鳥取県の県庁所在地は鳥取市。鳥取砂丘が有名。"],
+  ["徳島県の県庁所在地は？","徳島市",["阿南市","鳴門市","吉野川市"],"徳島県の県庁所在地は徳島市。阿波おどりと鳴門の渦潮が有名。"],
+  ["和歌山県の県庁所在地は？","和歌山市",["田辺市","橋本市","新宮市"],"和歌山県の県庁所在地は和歌山市。南海の拠点都市。"],
+  ["奈良県の県庁所在地は？","奈良市",["橿原市","天理市","大和郡山市"],"奈良県の県庁所在地は奈良市。東大寺・春日大社などの古都。"],
+  ["京都府の県庁所在地は？","京都市",["宇治市","亀岡市","舞鶴市"],"京都府の府庁所在地は京都市。千年の古都。"],
+  ["大阪府の府庁所在地は？","大阪市",["堺市","東大阪市","豊中市"],"大阪府の府庁所在地は大阪市。「天下の台所」と呼ばれる。"],
+  ["福井県の県庁所在地は？","福井市",["敦賀市","小浜市","越前市"],"福井県の県庁所在地は福井市。東尋坊・恐竜博物館が有名。"],
+  ["富山県の県庁所在地は？","富山市",["高岡市","魚津市","射水市"],"富山県の県庁所在地は富山市。立山連峰が見える。"],
+  ["新潟県の県庁所在地は？","新潟市",["長岡市","上越市","三条市"],"新潟県の県庁所在地は新潟市。日本一の米どころ。"],
+  ["長野県の県庁所在地は？","長野市",["松本市","上田市","飯田市"],"長野県の県庁所在地は長野市。善光寺と1998年冬季五輪で有名。"],
+  ["静岡県の県庁所在地は？","静岡市",["浜松市","沼津市","富士市"],"静岡県の県庁所在地は静岡市。浜松市の方が人口が多いが、県庁は静岡市にある。"],
+  ["岐阜県の県庁所在地は？","岐阜市",["大垣市","各務原市","高山市"],"岐阜県の県庁所在地は岐阜市。長良川の鵜飼いで有名。"],
+  ["福島県の県庁所在地は？","福島市",["郡山市","いわき市","会津若松市"],"福島県の県庁所在地は福島市。郡山市・いわき市の方が人口が多い。"],
+  ["山形県の県庁所在地は？","山形市",["鶴岡市","酒田市","米沢市"],"山形県の県庁所在地は山形市。さくらんぼの産地。"],
+  ["秋田県の県庁所在地は？","秋田市",["横手市","大仙市","能代市"],"秋田県の県庁所在地は秋田市。なまはげで有名。"],
+  ["青森県の県庁所在地は？","青森市",["弘前市","八戸市","十和田市"],"青森県の県庁所在地は青森市。ねぶた祭りで有名。"],
+];
+
+</script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const STORAGE_KEY = "kencho_best";
+const QUIZ_KEY = "rv_kencho";
+const Q_OPTIONS = [5, 10, 15, 20];
+const BTN = "linear-gradient(135deg,#3b82f6,#1e3a8a)";
+
+const BANKS = { mix: { bank: KENCHO_BANK, color:"#1e3a8a", title:"県庁所在地" } };
+
+function pickProblems(diff, total) {
+  let pool = [];
+  const targets = diff === "mix" ? Object.values(BANKS) : [BANKS[diff]];
+  targets.forEach(({ bank, color, title }) => {
+    bank.forEach(([q, ans, wrongs, exp]) => {
+      const opts = shuffle([ans, ...wrongs.slice(0, 3)]);
+      pool.push({ color, title, question: q, options: opts, answer: opts.indexOf(ans),
+        explanation: `【正解】${ans}
+${exp}` });
+    });
+  });
+  const shuffled = shuffle(pool);
+  const result = []; const used = new Set();
+  while (result.length < total) {
+    const idx = Math.floor(Math.random() * shuffled.length);
+    if (!used.has(idx) || shuffled.length < total) { used.add(idx); result.push({...shuffled[idx]}); }
+  }
+  return result;
+}
+
+function SelectAnswer({ problem, checked, userAnswer, onAnswer }) {
+  return (
+    <div className="select-grid">
+      {problem.options.map((opt, i) => {
+        let cls = "select-btn";
+        if (checked) {
+          if (i === problem.answer) cls += " show-correct";
+          else if (i === userAnswer) cls += " wrong";
+        }
+        return (
+          <button key={i} className={cls} onClick={() => !checked && onAnswer(i)}>
+            <span style={{color:"#6b7280",marginRight:"8px",fontWeight:"normal"}}>{"①②③④"[i]}</span>
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function App() {
+  const [mode,setMode] = useState("setup");
+  const [reviewBank,setReviewBank] = useState([]);
+  const [diff,setDiff] = useState("mix");
+  const [totalQ,setTotalQ] = useState(10);
+  const [problems,setProblems] = useState([]);
+  const [current,setCurrent] = useState(0);
+  const [score,setScore] = useState(0);
+  const [streak,setStreak] = useState(0);
+  const [best,setBest] = useState(0);
+  const [checked,setChecked] = useState(false);
+  const [userAnswer,setUserAnswer] = useState(null);
+  const [celeb,setCeleb] = useState(false);
+  const [isCorrect,setIsCorrect] = useState(false);
+
+  useEffect(() => {
+    try { const s=localStorage.getItem(STORAGE_KEY); if(s) setBest(parseInt(s)||0); } catch(_) {}
+    setReviewBank(JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]'));
+  }, []);
+  const saveBest = v => { try { localStorage.setItem(STORAGE_KEY,String(v)); } catch(_) {} };
+
+  const startReview = () => {
+    const bank = JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+    setReviewBank(bank);
+    if (bank.length === 0) { setMode("setup"); return; }
+    const reshuffled = bank.map(p => {
+      const c=p.options[p.answer]; const opts=shuffle([...p.options]);
+      return {...p, options:opts, answer:opts.indexOf(c)};
+    });
+    setProblems(reshuffled); setCurrent(0); setScore(0); setStreak(0);
+    setChecked(false); setUserAnswer(null); setCeleb(false); setMode("review");
+  };
+
+  const startQuiz = () => {
+    setProblems(pickProblems(diff, totalQ)); setCurrent(0); setScore(0); setStreak(0);
+    setChecked(false); setUserAnswer(null); setCeleb(false); setMode("quiz");
+  };
+
+  const problem = problems[current] || null;
+
+  const handleAnswer = ans => {
+    if (checked) return;
+    setUserAnswer(ans); setChecked(true);
+    const ok = ans === problem.answer;
+    setIsCorrect(ok);
+    if (ok) {
+      setScore(s=>s+1); const ns=streak+1; setStreak(ns);
+      if(ns>best){setBest(ns);saveBest(ns);}
+      setCeleb(true); setTimeout(()=>setCeleb(false),1800);
+      try{const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');const id=problem.title+'|'+problem.question;const i=b.findIndex(x=>x._id===id);if(i>=0){b[i].ok=(b[i].ok||0)+1;if(b[i].ok>=5)b.splice(i,1);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
+    } else {
+      setStreak(0);
+      try{const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');const id=problem.title+'|'+problem.question;if(!b.find(x=>x._id===id)){const s={...problem,_id:id,ok:0};b.push(s);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
+    }
+  };
+
+  const nextQuestion = () => {
+    const _end = current+1 >= problems.length;
+    if (_end && mode==="review") {
+      const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+      setReviewBank([...b]);
+      if(b.length>0){startReview();}else{setMode("graduated");}
+      return;
+    }
+    if (_end) { setMode("result"); return; }
+    setCurrent(c=>c+1); setChecked(false); setUserAnswer(null); setCeleb(false);
+  };
+
+  const progress = problem ? (current/problems.length)*100 : 0;
+  const DIFF_OPTIONS = [{key:"mix", emoji:"🗾", name:"全都道府県ミックス", desc:"47都道府県の県庁所在地をランダム出題"}];
+
+  if (mode === "graduated") return (
+    <div className="setup-wrap" style={{background: "#eff6ff"}}>
+      <div className="setup-card">
+        <div className="setup-emoji">🎓</div>
+        <h2 className="setup-title" style={{color:"#1e3a8a"}}>復習バンク卒業！</h2>
+        <p style={{fontSize:"14px",color:"#3b82f6",marginBottom:"16px",fontWeight:"bold"}}>すべての問題を5回正解！</p>
+        <div style={{background:"#dbeafe",borderRadius:"14px",padding:"16px",marginBottom:"16px",fontSize:"13px",color:"#1e3a8a",lineHeight:"1.8"}}>🌟 マスター達成！</div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #1e3a8a"}} onClick={()=>setMode("setup")}>もどる</button>
+      </div>
+    </div>
+  );
+
+  if (mode === "setup") return (
+    <div className="setup-wrap" style={{background:"#eff6ff"}}>
+      <div className="setup-card">
+        <div style={{textAlign:"center",marginBottom:"12px",fontSize:"12px"}}>
+          <a href="https://shoi141.github.io/shakai-quiz/" style={{color:"#adb5bd",textDecoration:"none"}}>← 社会トップ</a>
+          {"　|　"}
+          <a href="https://shoi141.github.io/quiz-portal/" style={{color:"#adb5bd",textDecoration:"none"}}>🏠 教科トップ</a>
+        </div>
+        <div className="setup-emoji">🏛️</div>
+        <h1 className="setup-title" style={{color:"#1e3a8a"}}>県庁所在地クイズ</h1>
+        <p className="setup-sub">都道府県の県庁所在地を覚えよう！</p>
+        <div style={{marginBottom:"16px"}}>
+          <button onClick={()=>{if(reviewBank.length>0)startReview();}}
+            style={{width:"100%",padding:"14px 16px",borderRadius:"14px",
+              cursor:reviewBank.length>0?"pointer":"default",
+              border:reviewBank.length>0?"2px solid #ef4444":"2px solid #e5e7eb",
+              background:reviewBank.length>0?"#fef2f2":"#f9fafb",
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+              fontFamily:"inherit",opacity:reviewBank.length===0?0.45:1}}>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontWeight:"900",fontSize:"15px",color:reviewBank.length>0?"#b91c1c":"#374151"}}>📚 復習モード</div>
+              {reviewBank.length>0&&<div style={{fontSize:"11px",color:"#ef4444",marginTop:"2px"}}>タップして今すぐ開始！</div>}
+            </div>
+            <span style={{background:reviewBank.length>0?"#ef4444":"#d1d5db",color:"#fff",borderRadius:"99px",padding:"4px 12px",fontSize:"13px",fontWeight:"bold"}}>
+              {reviewBank.length>0?reviewBank.length+"問":"なし"}
+            </span>
+          </button>
+          {reviewBank.length===0&&<div style={{fontSize:"11px",color:"#9ca3af",textAlign:"center",marginTop:"4px"}}>間違えた問題が溜まるとここで復習できます</div>}
+        </div>
+        {best>0&&<div className="best-badge" style={{background:"#dbeafe",border:"1.5px solid #3b82f6",color:"#1e3a8a"}}>🏆 最高連続記録：<strong>{best}問</strong></div>}
+        <div className="qcount-section">分野を選ぶ</div>
+        <div className="diff-btn-row">
+          {DIFF_OPTIONS.map(d=>(
+            <button key={d.key} className="diff-card-btn"
+              style={{background:diff===d.key?"#dbeafe"  :"#f9fafb",
+                      border:diff===d.key?"2px solid #3b82f6":"2px solid #e5e7eb",
+                      boxShadow:diff===d.key?"0 3px 0 #3b82f6":"none"}}
+              onClick={()=>setDiff(d.key)}>
+              <span style={{fontSize:"22px"}}>{d.emoji}</span>
+              <div>
+                <div className="diff-name" style={{color:diff===d.key?"#1e3a8a"  :"#1f2937"}}>{d.name}</div>
+                <div className="diff-desc">{d.desc}</div>
+              </div>
+              {diff===d.key&&<span style={{marginLeft:"auto",fontSize:"18px"}}>✅</span>}
+            </button>
+          ))}
+        </div>
+        <div className="qcount-section">何問やる？</div>
+        <div className="qcount-grid">
+          {Q_OPTIONS.map(n=>(
+            <button key={n} className="qcount-btn"
+              style={{border:totalQ===n?"2px solid #3b82f6":"2px solid #dee2e6",
+                      background:totalQ===n?"#3b82f6"  :"#f8f9fa",
+                      color:totalQ===n?"#fff":"#495057",
+                      boxShadow:totalQ===n?"0 3px 0 #1e3a8a":"none"}}
+              onClick={()=>setTotalQ(n)}>{n}問</button>
+          ))}
+        </div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #1e3a8a"}} onClick={startQuiz}>スタート！ 🚀</button>
+      </div>
+    </div>
+  );
+
+  if (mode === "result") {
+    const pct = Math.round((score/problems.length)*100);
+    return (
+      <div className="setup-wrap" style={{background:"#eff6ff"}}>
+        <div className="setup-card">
+          <div className="setup-emoji">{pct===100?"🏆":pct>=70?"🎉":"💪"}</div>
+          <h2 className="setup-title" style={{color:"#1e3a8a"}}>おわり！</h2>
+          <p className="result-score">{problems.length}問中 <span className="result-big" style={{color:"#3b82f6"}}>{score}</span> 問正解</p>
+          <div className="pct-bar-bg" style={{background:"#dbeafe"}}><div className="pct-bar-fill" style={{background:BTN,width:`${pct}%`}}/></div>
+          <p className="pct-text">{pct}%</p>
+          <div className="streak-result-row">
+            <div className="streak-result-box"><div className="streak-result-label">この回の最高連続</div><div className="streak-result-val" style={{color:"#ef4444"}}>🔥 {streak}問</div></div>
+            <div className="streak-result-box"><div className="streak-result-label">歴代最高連続</div><div className="streak-result-val" style={{color:"#f59f00"}}>🏆 {best}問</div></div>
+          </div>
+          <div style={{display:"flex",gap:"8px",marginTop:"16px"}}>
+            <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #1e3a8a"}} onClick={startQuiz}>もう一度</button>
+            <button className="start-btn" style={{background:"#868e96",color:"#fff",boxShadow:"0 4px 0 #495057"}} onClick={()=>setMode("setup")}>設定へ</button>
+          </div>
+          {reviewBank.length>0&&(
+            <button className="start-btn" style={{background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",boxShadow:"0 4px 0 #991b1b",marginTop:"8px",width:"100%"}} onClick={startReview}>続けて復習する 📚 ({reviewBank.length}問)</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!problem) return null;
+
+  return (
+    <div className="rika-root">
+      {celeb&&(
+        <div className="celeb-overlay">
+          <div className="celeb-box">
+            <div className="celeb-emoji">🎉</div>
+            <div className="celeb-text" style={{color:"#1e3a8a"}}>せいかい！</div>
+            <div className="celeb-stars">{randomStars(5)}</div>
+            {streak>=3&&<div className="celeb-streak" style={{background:"#3b82f6"}}>🔥 {streak}れんぞく！</div>}
+            {streak===best&&streak>1&&<div className="celeb-streak" style={{background:"#f59f00",marginTop:"6px"}}>🏆 新記録！</div>}
+          </div>
+        </div>
+      )}
+      <div className="quiz-header">
+        <button className="back-btn" onClick={()=>setMode("setup")}>← もどる</button>
+        <span className="q-label">Q{current+1}<span className="q-total">/{problems.length}</span></span>
+        <span className="streak-badge">🔥{streak}</span>
+      </div>
+      <div className="progress-bar-bg">
+        <div className="progress-fill" style={{background:problem.color,width:`${progress}%`}}/>
+      </div>
+      <div className="problem-card" style={{borderTop:`5px solid ${problem.color}`}}>
+        <div style={{fontWeight:"900",fontSize:"12px",color:problem.color,marginBottom:"8px"}}>{problem.title}</div>
+        <div style={{fontSize:"16px",fontWeight:"bold",lineHeight:"1.8",marginBottom:"14px"}}>{problem.question}</div>
+        <SelectAnswer problem={problem} checked={checked} userAnswer={userAnswer} onAnswer={handleAnswer}/>
+      </div>
+      {checked&&(
+        <>
+          <div style={{textAlign:"center",fontSize:"18px",fontWeight:"900",color:isCorrect?"#10b981":"#ef4444"}}>
+            {isCorrect?"⭕ 正解！":"❌ 不正解"}
+          </div>
+          <div className="explanation-card">
+            <div style={{fontWeight:"900",marginBottom:"4px",fontSize:"12px",color:"#92400e"}}>💡 解説</div>
+            {problem.explanation.split("\n").map((line,i)=><div key={i}>{line}</div>)}
+          </div>
+          <button className="next-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #1e3a8a"}} onClick={nextQuestion}>
+            {current+1>=problems.length?"結果を見る 🎉":"つぎへ →"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>農業・産地クイズ</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+body{background:#f0fdf4;}
+.rika-root{min-height:100vh;background:#f0fdf4;padding:12px;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+.select-grid{display:flex;flex-direction:column;gap:8px;}
+.select-btn{width:100%;padding:13px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;cursor:pointer;font-size:14px;font-weight:bold;text-align:left;font-family:inherit;}
+.select-btn.show-correct{background:#d1fae5;border-color:#10b981;color:#065f46;}
+.select-btn.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b;opacity:0.7;}
+.explanation-card{background:#fef3c7;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f;line-height:1.9;}
+.diff-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.diff-card-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;cursor:pointer;text-align:left;border:2px solid transparent;font-family:inherit;background:#f9fafb;}
+.diff-card-btn .diff-name{font-weight:900;font-size:15px;}
+.diff-card-btn .diff-desc{font-size:11px;color:#6b7280;margin-top:2px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randomStars(n){return Array.from({length:n},()=>["⭐","🌟","✨"][randInt(0,2)]).join(" ");}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+const NOGYO_BANK = [
+  // 米
+  ["日本一の米の産地（生産量1位の都道府県）は？","新潟県",["秋田県","山形県","北海道"],"新潟県は「コシヒカリ」の産地として有名。越後平野（信濃川流域）が主産地。"],
+  ["「ひとめぼれ」「ササニシキ」で有名な米どころは？","宮城県",["秋田県","山形県","新潟県"],"宮城県は仙台平野が主産地。ひとめぼれ・ササニシキが有名品種。"],
+  ["北海道東部の台地で、大規模な酪農が行われているのは？","根釧台地",["十勝平野","石狩平野","上川盆地"],"根釧台地（北海道）は冷涼な気候を活かした酪農の大産地。チーズ・バターの生産が盛ん。"],
+  // 野菜
+  ["キャベツの生産量日本一の都道府県は？","愛知県",["群馬県","千葉県","茨城県"],"愛知県（渥美半島など）はキャベツ生産量日本一。春・秋キャベツが有名。"],
+  ["レタスの生産量が日本一の都道府県は？","長野県",["茨城県","群馬県","静岡県"],"長野県は冷涼な気候を活かした高原野菜の産地。レタス生産量日本一。"],
+  ["ほうれんそうの生産量が日本一の都道府県は？","千葉県",["埼玉県","群馬県","茨城県"],"千葉県はほうれんそう生産量日本一。大消費地の東京に近く、輸送に有利。"],
+  ["大根の生産量が日本一の都道府県は？","千葉県",["北海道","神奈川県","青森県"],"千葉県が大根生産量日本一（農水省2023年統計）。銚子市など北東部が主産地。北海道は作付面積は広いが収穫量では千葉が上回る。"],
+  ["ねぎの生産量が日本一の都道府県は？","千葉県",["埼玉県","茨城県","群馬県"],"千葉県がねぎ生産量日本一（農水省統計）。埼玉県の深谷ねぎも全国的に有名な産地。"],
+  // 果物
+  ["りんごの生産量日本一の都道府県は？","青森県",["長野県","岩手県","山形県"],"青森県はりんご生産量日本一。全国の約6割を生産。津軽地方が中心産地。"],
+  ["みかんの生産量日本一の都道府県は？","和歌山県",["愛媛県","静岡県","熊本県"],"和歌山県はみかん（温州みかん）生産量日本一。愛媛県・静岡県が続く。"],
+  ["ぶどうの生産量日本一の都道府県は？","山梨県",["長野県","山形県","岡山県"],"山梨県は甲府盆地でぶどう・モモの産地として有名。生産量日本一。"],
+  ["もも（桃）の生産量日本一の都道府県は？","山梨県",["福島県","長野県","岡山県"],"山梨県はもも（桃）生産量日本一。甲府盆地の温暖な気候が適している。"],
+  ["さくらんぼの生産量日本一の都道府県は？","山形県",["北海道","青森県","岩手県"],"山形県はさくらんぼ（おうとう）生産量日本一。「佐藤錦」が最も有名な品種。"],
+  ["いちごの生産量日本一の都道府県は？","栃木県",["福岡県","茨城県","千葉県"],"栃木県はいちご生産量日本一。「とちおとめ」「スカイベリー」が有名品種。"],
+  ["メロンの生産量日本一の都道府県は？","茨城県",["北海道","静岡県","熊本県"],"茨城県はメロン生産量日本一。鉾田市が主産地。静岡のクラウンメロン・北海道も有名。"],
+  // 特産品
+  ["電照菊の生産で有名な愛知県の半島は？","渥美半島",["知多半島","志摩半島","伊豆半島"],"渥美半島（愛知県）は電照菊の産地として有名。電灯で開花時期を調整する栽培方法。"],
+  ["促成栽培（早づくり）で有名な野菜産地がある高知県の平野は？","高知平野",["讃岐平野","徳島平野","宮崎平野"],"高知平野では温暖な気候を活かしピーマン・きゅうり・なすなどの促成栽培が盛ん。"],
+  ["宮崎県で盛んな、ビニールハウスを使った早づくり農業は？","促成栽培",["抑制栽培","電照栽培","高原農業"],"宮崎平野では温暖な気候とビニールハウスを使った促成栽培が盛ん。きゅうり・ピーマンが有名。"],
+  ["長野県や群馬県の高冷地で行われる、夏の涼しさを生かした農業は？","高冷地農業",["促成栽培","電照栽培","二毛作"],"長野県（野辺山高原）・群馬県（嬬恋村）では夏の涼しい気候を活かしキャベツ・レタスを栽培。"],
+  ["北海道十勝平野の主な農産物は？","じゃがいも・小麦・てんさい",["りんご・さくらんぼ・もも","みかん・メロン・いちご","大根・キャベツ・ねぎ"],"十勝平野は大規模農業が盛んで、じゃがいも・小麦・てんさい（砂糖の原料）などを生産。"],
+  ["茶の生産量日本一の都道府県は？","静岡県",["鹿児島県","三重県","京都府"],"静岡県は茶の生産量日本一。牧之原台地が主産地。鹿児島県が2位。"],
+];
+
+</script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const STORAGE_KEY = "nogyo_best";
+const QUIZ_KEY = "rv_nogyo";
+const Q_OPTIONS = [5, 10, 15, 20];
+const BTN = "linear-gradient(135deg,#16a34a,#14532d)";
+
+const BANKS = {
+  mix:        { bank: NOGYO_BANK,             color:"#16a34a", title:"農業・産地" },
+  kome:       { bank: NOGYO_BANK.slice(0,4),  color:"#ca8a04", title:"米・酪農" },
+  yasai:      { bank: NOGYO_BANK.slice(4,12), color:"#16a34a", title:"野菜" },
+  kudamono:   { bank: NOGYO_BANK.slice(12,21),color:"#dc2626", title:"果物" },
+  tokusanhin: { bank: NOGYO_BANK.slice(21),   color:"#0891b2", title:"特産品・栽培方法" },
+};
+
+function pickProblems(diff, total) {
+  let pool = [];
+  const targets = diff === "mix" ? Object.values(BANKS) : [BANKS[diff]];
+  targets.forEach(({ bank, color, title }) => {
+    bank.forEach(([q, ans, wrongs, exp]) => {
+      const opts = shuffle([ans, ...wrongs.slice(0, 3)]);
+      pool.push({ color, title, question: q, options: opts, answer: opts.indexOf(ans),
+        explanation: `【正解】${ans}
+${exp}` });
+    });
+  });
+  const shuffled = shuffle(pool);
+  const result = []; const used = new Set();
+  while (result.length < total) {
+    const idx = Math.floor(Math.random() * shuffled.length);
+    if (!used.has(idx) || shuffled.length < total) { used.add(idx); result.push({...shuffled[idx]}); }
+  }
+  return result;
+}
+
+function SelectAnswer({ problem, checked, userAnswer, onAnswer }) {
+  return (
+    <div className="select-grid">
+      {problem.options.map((opt, i) => {
+        let cls = "select-btn";
+        if (checked) {
+          if (i === problem.answer) cls += " show-correct";
+          else if (i === userAnswer) cls += " wrong";
+        }
+        return (
+          <button key={i} className={cls} onClick={() => !checked && onAnswer(i)}>
+            <span style={{color:"#6b7280",marginRight:"8px",fontWeight:"normal"}}>{"①②③④"[i]}</span>
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function App() {
+  const [mode,setMode] = useState("setup");
+  const [reviewBank,setReviewBank] = useState([]);
+  const [diff,setDiff] = useState("mix");
+  const [totalQ,setTotalQ] = useState(10);
+  const [problems,setProblems] = useState([]);
+  const [current,setCurrent] = useState(0);
+  const [score,setScore] = useState(0);
+  const [streak,setStreak] = useState(0);
+  const [best,setBest] = useState(0);
+  const [checked,setChecked] = useState(false);
+  const [userAnswer,setUserAnswer] = useState(null);
+  const [celeb,setCeleb] = useState(false);
+  const [isCorrect,setIsCorrect] = useState(false);
+
+  useEffect(() => {
+    try { const s=localStorage.getItem(STORAGE_KEY); if(s) setBest(parseInt(s)||0); } catch(_) {}
+    setReviewBank(JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]'));
+  }, []);
+  const saveBest = v => { try { localStorage.setItem(STORAGE_KEY,String(v)); } catch(_) {} };
+
+  const startReview = () => {
+    const bank = JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+    setReviewBank(bank);
+    if (bank.length === 0) { setMode("setup"); return; }
+    const reshuffled = bank.map(p => {
+      const c=p.options[p.answer]; const opts=shuffle([...p.options]);
+      return {...p, options:opts, answer:opts.indexOf(c)};
+    });
+    setProblems(reshuffled); setCurrent(0); setScore(0); setStreak(0);
+    setChecked(false); setUserAnswer(null); setCeleb(false); setMode("review");
+  };
+
+  const startQuiz = () => {
+    setProblems(pickProblems(diff, totalQ)); setCurrent(0); setScore(0); setStreak(0);
+    setChecked(false); setUserAnswer(null); setCeleb(false); setMode("quiz");
+  };
+
+  const problem = problems[current] || null;
+
+  const handleAnswer = ans => {
+    if (checked) return;
+    setUserAnswer(ans); setChecked(true);
+    const ok = ans === problem.answer;
+    setIsCorrect(ok);
+    if (ok) {
+      setScore(s=>s+1); const ns=streak+1; setStreak(ns);
+      if(ns>best){setBest(ns);saveBest(ns);}
+      setCeleb(true); setTimeout(()=>setCeleb(false),1800);
+      try{const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');const id=problem.title+'|'+problem.question;const i=b.findIndex(x=>x._id===id);if(i>=0){b[i].ok=(b[i].ok||0)+1;if(b[i].ok>=5)b.splice(i,1);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
+    } else {
+      setStreak(0);
+      try{const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');const id=problem.title+'|'+problem.question;if(!b.find(x=>x._id===id)){const s={...problem,_id:id,ok:0};b.push(s);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
+    }
+  };
+
+  const nextQuestion = () => {
+    const _end = current+1 >= problems.length;
+    if (_end && mode==="review") {
+      const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+      setReviewBank([...b]);
+      if(b.length>0){startReview();}else{setMode("graduated");}
+      return;
+    }
+    if (_end) { setMode("result"); return; }
+    setCurrent(c=>c+1); setChecked(false); setUserAnswer(null); setCeleb(false);
+  };
+
+  const progress = problem ? (current/problems.length)*100 : 0;
+  const DIFF_OPTIONS = [{key:"mix",emoji:"⭐",name:"ミックス（全分野）",desc:"全農業問題からランダム出題"},{key:"kome",emoji:"🌾",name:"米・酪農",desc:"米どころ・根釧台地など"},{key:"yasai",emoji:"🥬",name:"野菜",desc:"キャベツ・レタス・大根など産地"},{key:"kudamono",emoji:"🍎",name:"果物",desc:"りんご・みかん・ぶどうなど産地"},{key:"tokusanhin",emoji:"🏔️",name:"特産品・栽培方法",desc:"促成栽培・高冷地農業・電照菊など"}];
+
+  if (mode === "graduated") return (
+    <div className="setup-wrap" style={{background: "#f0fdf4"}}>
+      <div className="setup-card">
+        <div className="setup-emoji">🎓</div>
+        <h2 className="setup-title" style={{color:"#14532d"}}>復習バンク卒業！</h2>
+        <p style={{fontSize:"14px",color:"#16a34a",marginBottom:"16px",fontWeight:"bold"}}>すべての問題を5回正解！</p>
+        <div style={{background:"#dcfce7",borderRadius:"14px",padding:"16px",marginBottom:"16px",fontSize:"13px",color:"#14532d",lineHeight:"1.8"}}>🌟 マスター達成！</div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #14532d"}} onClick={()=>setMode("setup")}>もどる</button>
+      </div>
+    </div>
+  );
+
+  if (mode === "setup") return (
+    <div className="setup-wrap" style={{background:"#f0fdf4"}}>
+      <div className="setup-card">
+        <div style={{textAlign:"center",marginBottom:"12px",fontSize:"12px"}}>
+          <a href="https://shoi141.github.io/shakai-quiz/" style={{color:"#adb5bd",textDecoration:"none"}}>← 社会トップ</a>
+          {"　|　"}
+          <a href="https://shoi141.github.io/quiz-portal/" style={{color:"#adb5bd",textDecoration:"none"}}>🏠 教科トップ</a>
+        </div>
+        <div className="setup-emoji">🌾</div>
+        <h1 className="setup-title" style={{color:"#14532d"}}>農業・産地クイズ</h1>
+        <p className="setup-sub">日本の農業と産地を覚えよう！</p>
+        <div style={{marginBottom:"16px"}}>
+          <button onClick={()=>{if(reviewBank.length>0)startReview();}}
+            style={{width:"100%",padding:"14px 16px",borderRadius:"14px",
+              cursor:reviewBank.length>0?"pointer":"default",
+              border:reviewBank.length>0?"2px solid #ef4444":"2px solid #e5e7eb",
+              background:reviewBank.length>0?"#fef2f2":"#f9fafb",
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+              fontFamily:"inherit",opacity:reviewBank.length===0?0.45:1}}>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontWeight:"900",fontSize:"15px",color:reviewBank.length>0?"#b91c1c":"#374151"}}>📚 復習モード</div>
+              {reviewBank.length>0&&<div style={{fontSize:"11px",color:"#ef4444",marginTop:"2px"}}>タップして今すぐ開始！</div>}
+            </div>
+            <span style={{background:reviewBank.length>0?"#ef4444":"#d1d5db",color:"#fff",borderRadius:"99px",padding:"4px 12px",fontSize:"13px",fontWeight:"bold"}}>
+              {reviewBank.length>0?reviewBank.length+"問":"なし"}
+            </span>
+          </button>
+          {reviewBank.length===0&&<div style={{fontSize:"11px",color:"#9ca3af",textAlign:"center",marginTop:"4px"}}>間違えた問題が溜まるとここで復習できます</div>}
+        </div>
+        {best>0&&<div className="best-badge" style={{background:"#dcfce7",border:"1.5px solid #16a34a",color:"#14532d"}}>🏆 最高連続記録：<strong>{best}問</strong></div>}
+        <div className="qcount-section">分野を選ぶ</div>
+        <div className="diff-btn-row">
+          {DIFF_OPTIONS.map(d=>(
+            <button key={d.key} className="diff-card-btn"
+              style={{background:diff===d.key?"#dcfce7"  :"#f9fafb",
+                      border:diff===d.key?"2px solid #16a34a":"2px solid #e5e7eb",
+                      boxShadow:diff===d.key?"0 3px 0 #16a34a":"none"}}
+              onClick={()=>setDiff(d.key)}>
+              <span style={{fontSize:"22px"}}>{d.emoji}</span>
+              <div>
+                <div className="diff-name" style={{color:diff===d.key?"#14532d"  :"#1f2937"}}>{d.name}</div>
+                <div className="diff-desc">{d.desc}</div>
+              </div>
+              {diff===d.key&&<span style={{marginLeft:"auto",fontSize:"18px"}}>✅</span>}
+            </button>
+          ))}
+        </div>
+        <div className="qcount-section">何問やる？</div>
+        <div className="qcount-grid">
+          {Q_OPTIONS.map(n=>(
+            <button key={n} className="qcount-btn"
+              style={{border:totalQ===n?"2px solid #16a34a":"2px solid #dee2e6",
+                      background:totalQ===n?"#16a34a"  :"#f8f9fa",
+                      color:totalQ===n?"#fff":"#495057",
+                      boxShadow:totalQ===n?"0 3px 0 #14532d":"none"}}
+              onClick={()=>setTotalQ(n)}>{n}問</button>
+          ))}
+        </div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #14532d"}} onClick={startQuiz}>スタート！ 🚀</button>
+      </div>
+    </div>
+  );
+
+  if (mode === "result") {
+    const pct = Math.round((score/problems.length)*100);
+    return (
+      <div className="setup-wrap" style={{background:"#f0fdf4"}}>
+        <div className="setup-card">
+          <div className="setup-emoji">{pct===100?"🏆":pct>=70?"🎉":"💪"}</div>
+          <h2 className="setup-title" style={{color:"#14532d"}}>おわり！</h2>
+          <p className="result-score">{problems.length}問中 <span className="result-big" style={{color:"#16a34a"}}>{score}</span> 問正解</p>
+          <div className="pct-bar-bg" style={{background:"#dcfce7"}}><div className="pct-bar-fill" style={{background:BTN,width:`${pct}%`}}/></div>
+          <p className="pct-text">{pct}%</p>
+          <div className="streak-result-row">
+            <div className="streak-result-box"><div className="streak-result-label">この回の最高連続</div><div className="streak-result-val" style={{color:"#ef4444"}}>🔥 {streak}問</div></div>
+            <div className="streak-result-box"><div className="streak-result-label">歴代最高連続</div><div className="streak-result-val" style={{color:"#f59f00"}}>🏆 {best}問</div></div>
+          </div>
+          <div style={{display:"flex",gap:"8px",marginTop:"16px"}}>
+            <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #14532d"}} onClick={startQuiz}>もう一度</button>
+            <button className="start-btn" style={{background:"#868e96",color:"#fff",boxShadow:"0 4px 0 #495057"}} onClick={()=>setMode("setup")}>設定へ</button>
+          </div>
+          {reviewBank.length>0&&(
+            <button className="start-btn" style={{background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",boxShadow:"0 4px 0 #991b1b",marginTop:"8px",width:"100%"}} onClick={startReview}>続けて復習する 📚 ({reviewBank.length}問)</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!problem) return null;
+
+  return (
+    <div className="rika-root">
+      {celeb&&(
+        <div className="celeb-overlay">
+          <div className="celeb-box">
+            <div className="celeb-emoji">🎉</div>
+            <div className="celeb-text" style={{color:"#14532d"}}>せいかい！</div>
+            <div className="celeb-stars">{randomStars(5)}</div>
+            {streak>=3&&<div className="celeb-streak" style={{background:"#16a34a"}}>🔥 {streak}れんぞく！</div>}
+            {streak===best&&streak>1&&<div className="celeb-streak" style={{background:"#f59f00",marginTop:"6px"}}>🏆 新記録！</div>}
+          </div>
+        </div>
+      )}
+      <div className="quiz-header">
+        <button className="back-btn" onClick={()=>setMode("setup")}>← もどる</button>
+        <span className="q-label">Q{current+1}<span className="q-total">/{problems.length}</span></span>
+        <span className="streak-badge">🔥{streak}</span>
+      </div>
+      <div className="progress-bar-bg">
+        <div className="progress-fill" style={{background:problem.color,width:`${progress}%`}}/>
+      </div>
+      <div className="problem-card" style={{borderTop:`5px solid ${problem.color}`}}>
+        <div style={{fontWeight:"900",fontSize:"12px",color:problem.color,marginBottom:"8px"}}>{problem.title}</div>
+        <div style={{fontSize:"16px",fontWeight:"bold",lineHeight:"1.8",marginBottom:"14px"}}>{problem.question}</div>
+        <SelectAnswer problem={problem} checked={checked} userAnswer={userAnswer} onAnswer={handleAnswer}/>
+      </div>
+      {checked&&(
+        <>
+          <div style={{textAlign:"center",fontSize:"18px",fontWeight:"900",color:isCorrect?"#10b981":"#ef4444"}}>
+            {isCorrect?"⭕ 正解！":"❌ 不正解"}
+          </div>
+          <div className="explanation-card">
+            <div style={{fontWeight:"900",marginBottom:"4px",fontSize:"12px",color:"#92400e"}}>💡 解説</div>
+            {problem.explanation.split("\n").map((line,i)=><div key={i}>{line}</div>)}
+          </div>
+          <button className="next-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #14532d"}} onClick={nextQuestion}>
+            {current+1>=problems.length?"結果を見る 🎉":"つぎへ →"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

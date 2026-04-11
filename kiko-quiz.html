@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>気候クイズ</title>
+<link rel="stylesheet" href="common.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+body{background:#f0f9ff;}
+.rika-root{min-height:100vh;background:#f0f9ff;padding:12px;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+.select-grid{display:flex;flex-direction:column;gap:8px;}
+.select-btn{width:100%;padding:13px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;cursor:pointer;font-size:14px;font-weight:bold;text-align:left;font-family:inherit;}
+.select-btn.show-correct{background:#d1fae5;border-color:#10b981;color:#065f46;}
+.select-btn.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b;opacity:0.7;}
+.explanation-card{background:#fef3c7;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f;line-height:1.9;}
+.diff-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.diff-card-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;cursor:pointer;text-align:left;border:2px solid transparent;font-family:inherit;background:#f9fafb;}
+.diff-card-btn .diff-name{font-weight:900;font-size:15px;}
+.diff-card-btn .diff-desc{font-size:11px;color:#6b7280;margin-top:2px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randomStars(n){return Array.from({length:n},()=>["⭐","🌟","✨"][randInt(0,2)]).join(" ");}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+const KIKO_BANK = [
+  ["日本の太平洋側では夏に雨が多く冬に乾燥する。この気候の特徴は？","太平洋側の気候",["日本海側の気候","内陸の気候","瀬戸内の気候"],"太平洋側は夏に南東の季節風・台風の影響で雨が多く、冬は乾燥して晴れの日が続く。"],
+  ["日本海側では冬に雪が多い。その理由は？","北西の季節風が日本海で水分を含み、山地にぶつかって雪を降らせるから",["南東の季節風が水分を含むから","台風が冬に多く来るから","暖流の日本海流が蒸発するから"],"冬の北西季節風は日本海で水蒸気を含み、脊梁山脈にぶつかって日本海側に大雪を降らせる。太平洋側は乾いた風になり晴れる。"],
+  ["瀬戸内海沿岸の気候の特徴は？","一年を通じて雨が少なく温暖",["冬に雪が多い","夏に雨が多い","一年中蒸し暑い"],"瀬戸内の気候は中国山地と四国山地に挟まれ季節風の影響を受けにくいため、年間を通じて晴れの日が多く雨が少ない。"],
+  ["北海道の気候の特徴は？","梅雨がなく冬の寒さが厳しい","冬に雪が多く梅雨もある","夏に台風が多い","一年中温暖で雨が多い"],"北海道は梅雨がない。夏は涼しく冬の寒さが厳しい。農業は短い夏に集中する。"],
+  ["沖縄・南西諸島の気候の特徴は？","年中温暖で台風が多い",["梅雨がなく乾燥する","冬に雪が降る","夏に雨が少ない"],"沖縄は亜熱帯性気候で一年中温暖。台風の通り道で夏〜秋に台風の影響を受けやすい。"],
+  ["夏に「やませ」と呼ばれる冷たい北東の風が吹き、冷害が起きやすい地方は？","東北地方の太平洋側",["北海道","関東地方","九州地方"],"やませは夏に東北の太平洋側に吹く冷たい北東の風。低温・日照不足により冷害（凶作）が起きる。"],
+  ["「フェーン現象」とは何？","山を越えた風が乾燥して高温になる現象",["海から冷たい風が吹く現象","山地に雪が大量に降る現象","内陸が夏に極端に暑くなる現象"],"湿った風が山を越えると雨を降らせ、反対側は乾燥した熱い風になる。日本海側の夏の高温はこれが原因の一つ。"],
+  ["日本最多雨地点として知られる、三重県南部の地名は？","尾鷲市",["奄美大島","屋久島","高知市"],"三重県尾鷲市は年間降水量が4000mmを超える日本有数の多雨地帯。紀伊山地の南東斜面で台風の影響を受けやすい。"],
+  ["内陸性気候（中央高地の気候）の特徴は？","夏と冬・昼と夜の気温差が大きい",["一年中雨が多い","冬に雪が多い","梅雨がない"],"長野県などの内陸は海から遠いため気温の変化が大きい。夏は暑く冬は寒い。降水量は少なめ。"],
+  ["日本に梅雨をもたらす、北上する前線は？","梅雨前線",["寒冷前線","温暖前線","閉塞前線"],"梅雨は6〜7月ごろ、冷たい気団と暖かい気団の間に梅雨前線（停滞前線）ができて雨が降り続く現象。"],
+  ["台風が日本に接近しやすい時期は？","8月〜10月",["3月〜5月","6月〜7月","11月〜1月"],"台風は熱帯の海上で発生し、日本には主に8〜10月に接近。特に9月は上陸数が最も多い。"],
+  ["屋久島（鹿児島県）が年間降水量8000mm超の多雨地帯である理由は？","山が高く、黒潮と季節風の影響で雲が発生しやすいから",["台風が毎月来るから","熱帯に位置するから","海流が特別に温かいから"],"屋久島の宮之浦岳（1936m）は九州最高峰。暖流（黒潮）と季節風の影響で雲が発生しやすく多雨。"],
+];
+
+</script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const STORAGE_KEY = "kiko_best";
+const QUIZ_KEY = "rv_kiko";
+const Q_OPTIONS = [5, 10, 15, 20];
+const BTN = "linear-gradient(135deg,#0284c7,#0c4a6e)";
+
+const BANKS = { mix: { bank: KIKO_BANK, color:"#0284c7", title:"日本の気候" } };
+
+function pickProblems(diff, total) {
+  let pool = [];
+  const targets = diff === "mix" ? Object.values(BANKS) : [BANKS[diff]];
+  targets.forEach(({ bank, color, title }) => {
+    bank.forEach(([q, ans, wrongs, exp]) => {
+      const opts = shuffle([ans, ...wrongs.slice(0, 3)]);
+      pool.push({ color, title, question: q, options: opts, answer: opts.indexOf(ans),
+        explanation: `【正解】${ans}
+${exp}` });
+    });
+  });
+  const shuffled = shuffle(pool);
+  const result = []; const used = new Set();
+  while (result.length < total) {
+    const idx = Math.floor(Math.random() * shuffled.length);
+    if (!used.has(idx) || shuffled.length < total) { used.add(idx); result.push({...shuffled[idx]}); }
+  }
+  return result;
+}
+
+function SelectAnswer({ problem, checked, userAnswer, onAnswer }) {
+  return (
+    <div className="select-grid">
+      {problem.options.map((opt, i) => {
+        let cls = "select-btn";
+        if (checked) {
+          if (i === problem.answer) cls += " show-correct";
+          else if (i === userAnswer) cls += " wrong";
+        }
+        return (
+          <button key={i} className={cls} onClick={() => !checked && onAnswer(i)}>
+            <span style={{color:"#6b7280",marginRight:"8px",fontWeight:"normal"}}>{"①②③④"[i]}</span>
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function App() {
+  const [mode,setMode] = useState("setup");
+  const [reviewBank,setReviewBank] = useState([]);
+  const [diff,setDiff] = useState("mix");
+  const [totalQ,setTotalQ] = useState(10);
+  const [problems,setProblems] = useState([]);
+  const [current,setCurrent] = useState(0);
+  const [score,setScore] = useState(0);
+  const [streak,setStreak] = useState(0);
+  const [best,setBest] = useState(0);
+  const [checked,setChecked] = useState(false);
+  const [userAnswer,setUserAnswer] = useState(null);
+  const [celeb,setCeleb] = useState(false);
+  const [isCorrect,setIsCorrect] = useState(false);
+
+  useEffect(() => {
+    try { const s=localStorage.getItem(STORAGE_KEY); if(s) setBest(parseInt(s)||0); } catch(_) {}
+    setReviewBank(JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]'));
+  }, []);
+  const saveBest = v => { try { localStorage.setItem(STORAGE_KEY,String(v)); } catch(_) {} };
+
+  const startReview = () => {
+    const bank = JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+    setReviewBank(bank);
+    if (bank.length === 0) { setMode("setup"); return; }
+    const reshuffled = bank.map(p => {
+      const c=p.options[p.answer]; const opts=shuffle([...p.options]);
+      return {...p, options:opts, answer:opts.indexOf(c)};
+    });
+    setProblems(reshuffled); setCurrent(0); setScore(0); setStreak(0);
+    setChecked(false); setUserAnswer(null); setCeleb(false); setMode("review");
+  };
+
+  const startQuiz = () => {
+    setProblems(pickProblems(diff, totalQ)); setCurrent(0); setScore(0); setStreak(0);
+    setChecked(false); setUserAnswer(null); setCeleb(false); setMode("quiz");
+  };
+
+  const problem = problems[current] || null;
+
+  const handleAnswer = ans => {
+    if (checked) return;
+    setUserAnswer(ans); setChecked(true);
+    const ok = ans === problem.answer;
+    setIsCorrect(ok);
+    if (ok) {
+      setScore(s=>s+1); const ns=streak+1; setStreak(ns);
+      if(ns>best){setBest(ns);saveBest(ns);}
+      setCeleb(true); setTimeout(()=>setCeleb(false),1800);
+      try{const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');const id=problem.title+'|'+problem.question;const i=b.findIndex(x=>x._id===id);if(i>=0){b[i].ok=(b[i].ok||0)+1;if(b[i].ok>=5)b.splice(i,1);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
+    } else {
+      setStreak(0);
+      try{const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');const id=problem.title+'|'+problem.question;if(!b.find(x=>x._id===id)){const s={...problem,_id:id,ok:0};b.push(s);localStorage.setItem(QUIZ_KEY,JSON.stringify(b));}setReviewBank([...b]);}catch(_){}
+    }
+  };
+
+  const nextQuestion = () => {
+    const _end = current+1 >= problems.length;
+    if (_end && mode==="review") {
+      const b=JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]');
+      setReviewBank([...b]);
+      if(b.length>0){startReview();}else{setMode("graduated");}
+      return;
+    }
+    if (_end) { setMode("result"); return; }
+    setCurrent(c=>c+1); setChecked(false); setUserAnswer(null); setCeleb(false);
+  };
+
+  const progress = problem ? (current/problems.length)*100 : 0;
+  const DIFF_OPTIONS = [{key:"mix", emoji:"🌤️", name:"全問ミックス", desc:"太平洋側・日本海側・内陸・瀬戸内・沖縄など"}];
+
+  if (mode === "graduated") return (
+    <div className="setup-wrap" style={{background: "#f0f9ff"}}>
+      <div className="setup-card">
+        <div className="setup-emoji">🎓</div>
+        <h2 className="setup-title" style={{color:"#0c4a6e"}}>復習バンク卒業！</h2>
+        <p style={{fontSize:"14px",color:"#0284c7",marginBottom:"16px",fontWeight:"bold"}}>すべての問題を5回正解！</p>
+        <div style={{background:"#e0f2fe",borderRadius:"14px",padding:"16px",marginBottom:"16px",fontSize:"13px",color:"#0c4a6e",lineHeight:"1.8"}}>🌟 マスター達成！</div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #0c4a6e"}} onClick={()=>setMode("setup")}>もどる</button>
+      </div>
+    </div>
+  );
+
+  if (mode === "setup") return (
+    <div className="setup-wrap" style={{background:"#f0f9ff"}}>
+      <div className="setup-card">
+        <div style={{textAlign:"center",marginBottom:"12px",fontSize:"12px"}}>
+          <a href="https://shoi141.github.io/shakai-quiz/" style={{color:"#adb5bd",textDecoration:"none"}}>← 社会トップ</a>
+          {"　|　"}
+          <a href="https://shoi141.github.io/quiz-portal/" style={{color:"#adb5bd",textDecoration:"none"}}>🏠 教科トップ</a>
+        </div>
+        <div className="setup-emoji">🌤️</div>
+        <h1 className="setup-title" style={{color:"#0c4a6e"}}>気候クイズ</h1>
+        <p className="setup-sub">日本の気候の特徴を覚えよう！</p>
+        <div style={{marginBottom:"16px"}}>
+          <button onClick={()=>{if(reviewBank.length>0)startReview();}}
+            style={{width:"100%",padding:"14px 16px",borderRadius:"14px",
+              cursor:reviewBank.length>0?"pointer":"default",
+              border:reviewBank.length>0?"2px solid #ef4444":"2px solid #e5e7eb",
+              background:reviewBank.length>0?"#fef2f2":"#f9fafb",
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+              fontFamily:"inherit",opacity:reviewBank.length===0?0.45:1}}>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontWeight:"900",fontSize:"15px",color:reviewBank.length>0?"#b91c1c":"#374151"}}>📚 復習モード</div>
+              {reviewBank.length>0&&<div style={{fontSize:"11px",color:"#ef4444",marginTop:"2px"}}>タップして今すぐ開始！</div>}
+            </div>
+            <span style={{background:reviewBank.length>0?"#ef4444":"#d1d5db",color:"#fff",borderRadius:"99px",padding:"4px 12px",fontSize:"13px",fontWeight:"bold"}}>
+              {reviewBank.length>0?reviewBank.length+"問":"なし"}
+            </span>
+          </button>
+          {reviewBank.length===0&&<div style={{fontSize:"11px",color:"#9ca3af",textAlign:"center",marginTop:"4px"}}>間違えた問題が溜まるとここで復習できます</div>}
+        </div>
+        {best>0&&<div className="best-badge" style={{background:"#e0f2fe",border:"1.5px solid #0284c7",color:"#0c4a6e"}}>🏆 最高連続記録：<strong>{best}問</strong></div>}
+        <div className="qcount-section">分野を選ぶ</div>
+        <div className="diff-btn-row">
+          {DIFF_OPTIONS.map(d=>(
+            <button key={d.key} className="diff-card-btn"
+              style={{background:diff===d.key?"#e0f2fe"  :"#f9fafb",
+                      border:diff===d.key?"2px solid #0284c7":"2px solid #e5e7eb",
+                      boxShadow:diff===d.key?"0 3px 0 #0284c7":"none"}}
+              onClick={()=>setDiff(d.key)}>
+              <span style={{fontSize:"22px"}}>{d.emoji}</span>
+              <div>
+                <div className="diff-name" style={{color:diff===d.key?"#0c4a6e"  :"#1f2937"}}>{d.name}</div>
+                <div className="diff-desc">{d.desc}</div>
+              </div>
+              {diff===d.key&&<span style={{marginLeft:"auto",fontSize:"18px"}}>✅</span>}
+            </button>
+          ))}
+        </div>
+        <div className="qcount-section">何問やる？</div>
+        <div className="qcount-grid">
+          {Q_OPTIONS.map(n=>(
+            <button key={n} className="qcount-btn"
+              style={{border:totalQ===n?"2px solid #0284c7":"2px solid #dee2e6",
+                      background:totalQ===n?"#0284c7"  :"#f8f9fa",
+                      color:totalQ===n?"#fff":"#495057",
+                      boxShadow:totalQ===n?"0 3px 0 #0c4a6e":"none"}}
+              onClick={()=>setTotalQ(n)}>{n}問</button>
+          ))}
+        </div>
+        <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #0c4a6e"}} onClick={startQuiz}>スタート！ 🚀</button>
+      </div>
+    </div>
+  );
+
+  if (mode === "result") {
+    const pct = Math.round((score/problems.length)*100);
+    return (
+      <div className="setup-wrap" style={{background:"#f0f9ff"}}>
+        <div className="setup-card">
+          <div className="setup-emoji">{pct===100?"🏆":pct>=70?"🎉":"💪"}</div>
+          <h2 className="setup-title" style={{color:"#0c4a6e"}}>おわり！</h2>
+          <p className="result-score">{problems.length}問中 <span className="result-big" style={{color:"#0284c7"}}>{score}</span> 問正解</p>
+          <div className="pct-bar-bg" style={{background:"#e0f2fe"}}><div className="pct-bar-fill" style={{background:BTN,width:`${pct}%`}}/></div>
+          <p className="pct-text">{pct}%</p>
+          <div className="streak-result-row">
+            <div className="streak-result-box"><div className="streak-result-label">この回の最高連続</div><div className="streak-result-val" style={{color:"#ef4444"}}>🔥 {streak}問</div></div>
+            <div className="streak-result-box"><div className="streak-result-label">歴代最高連続</div><div className="streak-result-val" style={{color:"#f59f00"}}>🏆 {best}問</div></div>
+          </div>
+          <div style={{display:"flex",gap:"8px",marginTop:"16px"}}>
+            <button className="start-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #0c4a6e"}} onClick={startQuiz}>もう一度</button>
+            <button className="start-btn" style={{background:"#868e96",color:"#fff",boxShadow:"0 4px 0 #495057"}} onClick={()=>setMode("setup")}>設定へ</button>
+          </div>
+          {reviewBank.length>0&&(
+            <button className="start-btn" style={{background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",boxShadow:"0 4px 0 #991b1b",marginTop:"8px",width:"100%"}} onClick={startReview}>続けて復習する 📚 ({reviewBank.length}問)</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!problem) return null;
+
+  return (
+    <div className="rika-root">
+      {celeb&&(
+        <div className="celeb-overlay">
+          <div className="celeb-box">
+            <div className="celeb-emoji">🎉</div>
+            <div className="celeb-text" style={{color:"#0c4a6e"}}>せいかい！</div>
+            <div className="celeb-stars">{randomStars(5)}</div>
+            {streak>=3&&<div className="celeb-streak" style={{background:"#0284c7"}}>🔥 {streak}れんぞく！</div>}
+            {streak===best&&streak>1&&<div className="celeb-streak" style={{background:"#f59f00",marginTop:"6px"}}>🏆 新記録！</div>}
+          </div>
+        </div>
+      )}
+      <div className="quiz-header">
+        <button className="back-btn" onClick={()=>setMode("setup")}>← もどる</button>
+        <span className="q-label">Q{current+1}<span className="q-total">/{problems.length}</span></span>
+        <span className="streak-badge">🔥{streak}</span>
+      </div>
+      <div className="progress-bar-bg">
+        <div className="progress-fill" style={{background:problem.color,width:`${progress}%`}}/>
+      </div>
+      <div className="problem-card" style={{borderTop:`5px solid ${problem.color}`}}>
+        <div style={{fontWeight:"900",fontSize:"12px",color:problem.color,marginBottom:"8px"}}>{problem.title}</div>
+        <div style={{fontSize:"16px",fontWeight:"bold",lineHeight:"1.8",marginBottom:"14px"}}>{problem.question}</div>
+        <SelectAnswer problem={problem} checked={checked} userAnswer={userAnswer} onAnswer={handleAnswer}/>
+      </div>
+      {checked&&(
+        <>
+          <div style={{textAlign:"center",fontSize:"18px",fontWeight:"900",color:isCorrect?"#10b981":"#ef4444"}}>
+            {isCorrect?"⭕ 正解！":"❌ 不正解"}
+          </div>
+          <div className="explanation-card">
+            <div style={{fontWeight:"900",marginBottom:"4px",fontSize:"12px",color:"#92400e"}}>💡 解説</div>
+            {problem.explanation.split("\n").map((line,i)=><div key={i}>{line}</div>)}
+          </div>
+          <button className="next-btn" style={{background:BTN,color:"#fff",boxShadow:"0 4px 0 #0c4a6e"}} onClick={nextQuestion}>
+            {current+1>=problems.length?"結果を見る 🎉":"つぎへ →"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
